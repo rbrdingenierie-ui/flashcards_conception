@@ -1,0 +1,2224 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" type="image/svg+xml" href="https://rbrdingenierie-ui.github.io/accueil_outils/favicon.svg">
+<link rel="apple-touch-icon" href="https://rbrdingenierie-ui.github.io/accueil_outils/favicon.svg">
+<title>Mes flashcards</title>
+<style>
+  :root {
+    --navy: #1F3864;
+    --navy-soft: #4A5C82;
+    --gold: #B08D57;
+    --rouge: #C0392B;
+    --rouge-soft: #FBE5E2;
+    --orange: #E0591F;
+    --orange-soft: #FBEAE3;
+    --teal: #168F7F;
+    --teal-soft: #E3F3F1;
+    --vert: #277649;
+    --vert-soft: #E4F3EA;
+    --bg: #F7F8FA;
+    --white: #FFFFFF;
+    --track: #8592B0;
+    --a11y-scale: 1;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin:0; padding:0; background: var(--bg); font-family: Arial, Helvetica, sans-serif; color: var(--navy); }
+  body { display:flex; justify-content:center; padding: 32px 16px 60px; }
+  .page { width:100%; max-width: 720px; }
+
+  header { text-align:center; margin-bottom: 20px; }
+  header h1 { font-size: calc(clamp(24px, 5vw, 30px) * var(--a11y-scale)); margin: 0 0 8px 0; }
+  header p { font-size: calc(15px * var(--a11y-scale)); color: var(--navy-soft); margin:0; }
+
+  a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+    outline: 3px solid var(--navy) !important;
+    outline-offset: 2px;
+  }
+
+  .skip-link {
+    position:absolute; left:-9999px; top:0; z-index:1000;
+    background:var(--navy); color:#FFFFFF; font-family:inherit; font-weight:700; font-size:14px;
+    padding:12px 20px; border-radius:0 0 10px 0; text-decoration:none;
+  }
+  .skip-link:focus { left:0; }
+
+  .back-to-hub {
+    display:inline-flex; align-items:center; gap:6px;
+    font-size:14px; font-weight:700; color:var(--navy);
+    background:#FFFFFF; border:2px solid var(--track); border-radius:999px;
+    padding:10px 18px; text-decoration:none; margin-bottom:16px; min-height:24px;
+  }
+  .back-to-hub:hover { border-color:var(--navy-soft); }
+  body.a11y-contrast .back-to-hub { border-color:#000000; color:#000000; }
+
+  .a11y-bar {
+    display:flex; align-items:center; justify-content:center; gap:10px; flex-wrap:wrap;
+    background: var(--white); border:2px solid var(--track); border-radius:14px;
+    padding: 12px 16px; margin-bottom: 24px;
+  }
+  /* une fois que l'apprenant descend dans la page, la barre reste accessible en haut.
+     Version compacte : elle ne doit pas manger l'ecran, surtout sur telephone. */
+  .a11y-bar.figee {
+    position:fixed; top:8px; left:50%; transform:translateX(-50%);
+    width:calc(100% - 20px); max-width:860px; z-index:1400;
+    padding:8px 12px; gap:7px; margin-bottom:0;
+    box-shadow:0 4px 18px rgba(31,56,100,0.18);
+  }
+  .a11y-bar.figee .a11y-toggle-btn { font-size:12px; padding:6px 11px; }
+  .a11y-bar.figee .a11y-bar-label { font-size:12px; }
+  .a11y-bar.figee .a11y-size-group { font-size:12px; }
+  .a11y-bar.figee .a11y-size-group button { width:30px; height:30px; font-size:13px; }
+
+  /* sur telephone, l'ecran est etroit : on reduit encore pour laisser voir le contenu */
+  @media (max-width: 620px) {
+    .a11y-bar.figee { padding:6px 8px; gap:5px; top:5px; }
+    .a11y-bar.figee .a11y-toggle-btn { font-size:11px; padding:5px 9px; }
+    .a11y-bar.figee .a11y-bar-label { font-size:11px; }
+    .a11y-bar.figee .a11y-size-group { font-size:11px; gap:4px; }
+    .a11y-bar.figee .a11y-size-group button { width:28px; height:28px; font-size:12px; }
+  }
+  /* remplace la barre dans le flux, pour que le contenu ne remonte pas d'un coup */
+  .a11y-bar-espace { display:none; }
+  .a11y-bar-espace.actif { display:block; }
+  .a11y-bar-label { font-size:13px; font-weight:800; color: var(--navy); margin-right:4px; }
+  .a11y-toggle-btn {
+    font-family:inherit; font-size:13px; font-weight:700; color: var(--navy-soft);
+    background: var(--white); border:2px solid var(--track); border-radius:999px;
+    padding: 8px 14px; cursor:pointer; min-height:24px;
+  }
+  .a11y-toggle-btn:hover { border-color: var(--navy-soft); }
+  .a11y-toggle-btn[aria-pressed="true"] { background: var(--navy); border-color: var(--navy); color:#FFFFFF; }
+  .a11y-size-group { display:flex; align-items:center; gap:6px; font-size:13px; font-weight:700; color: var(--navy); }
+  .a11y-size-group button {
+    font-family:inherit; font-weight:800; font-size:14px; color: var(--navy);
+    background: var(--white); border:2px solid var(--navy-soft); border-radius:8px;
+    width:34px; height:34px; cursor:pointer;
+  }
+  .a11y-size-group button:hover { border-color: var(--navy); }
+
+  body.a11y-font, body.a11y-font * { font-family: Verdana, Geneva, sans-serif !important; }
+  /* le recto/verso des cartes garde la police choisie par l'apprenant */
+  body.a11y-font .card-face-text[data-custom-font="1"] { font-family: inherit !important; }
+
+  .falc-simple-content { display:none; }
+  body.falc-mode .falc-normal-content { display:none; }
+  body.falc-mode .falc-simple-content { display:block; }
+  .falc-simple-content p { font-size: calc(16px * var(--a11y-scale)); line-height: 2; color:#000000; }
+
+  body.a11y-contrast { background:#FFFFFF; }
+  body.a11y-contrast .panel, body.a11y-contrast .a11y-bar, body.a11y-contrast .deck-item { border-color:#000000 !important; }
+  body.a11y-contrast header p, body.a11y-contrast .field-hint, body.a11y-contrast .empty-msg { color:#000000 !important; }
+
+  /* ---------- onglets ---------- */
+  .tabs { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-bottom:22px; }
+  .tab-btn {
+    font-family:inherit; font-size:calc(14px * var(--a11y-scale)); font-weight:700; color:var(--navy-soft);
+    background:var(--white); border:2px solid var(--track); border-radius:999px;
+    padding:11px 18px; cursor:pointer; min-height:44px;
+  }
+  .tab-btn:hover { border-color:var(--navy-soft); }
+  .tab-btn.active { background:var(--navy); border-color:var(--navy); color:#FFFFFF; }
+  .tab-panel { display:none; }
+  .tab-panel.active { display:block; }
+
+  /* ---------- panneaux ---------- */
+  .panel {
+    background:var(--white); border:2px solid var(--track); border-radius:18px;
+    padding:22px; margin-bottom:20px;
+  }
+  .panel-title { font-size:calc(16px * var(--a11y-scale)); font-weight:800; color:var(--navy); margin-bottom:14px; }
+  .lede { font-size:calc(14.5px * var(--a11y-scale)); color:var(--navy-soft); line-height:1.6; margin:0 0 14px; }
+
+  .field-block { margin-bottom:16px; }
+  .field-label { display:block; font-size:calc(13.5px * var(--a11y-scale)); font-weight:800; color:var(--navy); margin-bottom:6px; }
+  .field-hint { display:block; font-size:calc(12px * var(--a11y-scale)); color:var(--navy-soft); margin-top:5px; line-height:1.45; }
+  .field-input, .field-select, .field-textarea {
+    width:100%; font-family:inherit; font-size:calc(15px * var(--a11y-scale)); color:var(--navy);
+    border:2px solid var(--track); border-radius:12px; padding:11px 14px; background:var(--white);
+    min-height:44px;
+  }
+  .field-textarea { min-height:110px; resize:vertical; line-height:1.5; }
+  .field-input:focus, .field-select:focus, .field-textarea:focus { outline:none; border-color:var(--navy); }
+  .field-row { display:flex; gap:12px; flex-wrap:wrap; }
+  .field-row > * { flex:1; min-width:150px; }
+
+  .btn-primary {
+    font-family:inherit; font-size:calc(15px * var(--a11y-scale)); font-weight:700; color:#FFFFFF;
+    background:var(--navy); border:none; border-radius:12px; padding:13px 22px; cursor:pointer; min-height:44px;
+  }
+  .btn-primary:hover { filter:brightness(1.15); }
+  .btn-secondary {
+    font-family:inherit; font-size:calc(14px * var(--a11y-scale)); font-weight:700; color:var(--navy);
+    background:var(--white); border:2px solid var(--track); border-radius:12px; padding:11px 18px; cursor:pointer; min-height:44px;
+  }
+  .btn-secondary:hover { border-color:var(--navy); }
+  .btn-danger {
+    font-family:inherit; font-size:calc(13.5px * var(--a11y-scale)); font-weight:700; color:var(--rouge);
+    background:var(--rouge-soft); border:2px solid var(--rouge); border-radius:12px; padding:11px 18px; cursor:pointer; min-height:44px;
+  }
+  .btn-danger:hover { background:var(--rouge); color:#FFFFFF; }
+  .btn-row { display:flex; gap:10px; flex-wrap:wrap; margin-top:6px; }
+
+  /* ---------- personnalisation ---------- */
+  .style-row { display:flex; gap:14px; flex-wrap:wrap; align-items:flex-end; }
+  .style-group { flex:1; min-width:140px; }
+  .color-swatches { display:flex; gap:8px; flex-wrap:wrap; }
+  .color-swatch {
+    width:38px; height:38px; border-radius:10px; border:3px solid transparent; cursor:pointer; padding:0;
+  }
+  .color-swatch.selected { border-color:var(--navy); }
+  .color-swatch:focus-visible { outline:3px solid var(--navy); outline-offset:2px; }
+  .custom-color-row { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:10px; }
+  .custom-color-label { font-size:calc(12.5px * var(--a11y-scale)); font-weight:700; color:var(--navy-soft); }
+  .custom-color-input {
+    width:52px; height:38px; padding:2px; border:2px solid var(--track); border-radius:10px;
+    background:var(--white); cursor:pointer;
+  }
+  .custom-color-input:focus-visible { outline:3px solid var(--navy); outline-offset:2px; }
+
+  /* ---------- liste des cartes ---------- */
+  .card-list { display:flex; flex-direction:column; gap:12px; margin-top:16px; }
+  .card-item {
+    border:2px solid var(--track); border-radius:14px; padding:14px 16px; background:var(--bg);
+  }
+  .card-item-front { font-size:calc(14.5px * var(--a11y-scale)); font-weight:700; color:var(--navy); margin-bottom:4px; word-break:break-word; }
+  .card-item-back { font-size:calc(13.5px * var(--a11y-scale)); color:var(--navy-soft); line-height:1.5; word-break:break-word; }
+  .card-item-img { font-size:calc(12px * var(--a11y-scale)); color:var(--teal); margin-top:5px; }
+  .card-item-actions { display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; }
+  .card-mini-btn {
+    font-family:inherit; font-size:calc(12.5px * var(--a11y-scale)); font-weight:700; color:var(--navy);
+    background:var(--white); border:2px solid var(--track); border-radius:999px;
+    padding:8px 14px; cursor:pointer; min-height:36px;
+  }
+  .card-mini-btn:hover { border-color:var(--navy); }
+  .card-mini-btn.danger { color:var(--rouge); border-color:var(--rouge-soft); }
+  .card-mini-btn.danger:hover { background:var(--rouge); color:#FFFFFF; border-color:var(--rouge); }
+
+  .empty-msg { text-align:center; font-size:calc(13.5px * var(--a11y-scale)); color:var(--navy-soft); font-style:italic; padding:18px 10px; }
+
+  /* ---------- onglets explicatifs ---------- */
+  .principe-list { margin:0; padding-left:22px; }
+  .principe-list li {
+    font-size:calc(14px * var(--a11y-scale)); color:var(--navy-soft); line-height:1.65; margin-bottom:12px;
+  }
+  .principe-list li strong { color:var(--navy); }
+
+  /* 4 conseils : 2x2 sur ecran large, une colonne sur mobile (auto-fit donnait 3+1, desequilibre) */
+  .conseil-grid { display:grid; grid-template-columns:repeat(2, 1fr); gap:14px; margin-top:16px; }
+  @media (max-width: 560px) { .conseil-grid { grid-template-columns:1fr; } }
+  .conseil-card { border-radius:14px; padding:16px 16px 18px; border-top:5px solid; background:var(--bg); }
+  .conseil-1 { border-top-color:#3A3A3A; }
+  .conseil-2 { border-top-color:var(--teal); }
+  .conseil-3 { border-top-color:var(--gold); }
+  .conseil-4 { border-top-color:var(--orange); }
+  .conseil-icon { font-size:26px; margin-bottom:8px; }
+  .conseil-title {
+    font-size:calc(13.5px * var(--a11y-scale)); font-weight:800; color:var(--navy);
+    text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px; line-height:1.3;
+  }
+  .conseil-text { font-size:calc(13px * var(--a11y-scale)); color:var(--navy-soft); line-height:1.55; }
+
+  .how-step { display:flex; gap:14px; align-items:flex-start; margin-bottom:18px; }
+  .how-num {
+    flex-shrink:0; width:32px; height:32px; border-radius:50%;
+    background:var(--navy); color:#FFFFFF; font-weight:800; font-size:15px;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .how-body { flex:1; min-width:0; }
+  .how-title { font-size:calc(14.5px * var(--a11y-scale)); font-weight:800; color:var(--navy); margin-bottom:5px; }
+  .how-body p { font-size:calc(13.5px * var(--a11y-scale)); color:var(--navy-soft); line-height:1.6; margin:0; }
+  body.a11y-contrast .conseil-card { background:#FFFFFF; border:2px solid #000000; border-top-width:5px; }
+  body.a11y-contrast .conseil-text, body.a11y-contrast .principe-list li, body.a11y-contrast .how-body p { color:#000000 !important; }
+
+  /* ---------- paquets (matiere / chapitre) ---------- */
+  .deck-list { display:flex; flex-direction:column; gap:10px; }
+  .deck-item {
+    display:flex; align-items:center; gap:12px; justify-content:space-between;
+    border:2px solid var(--track); border-radius:14px; padding:14px 16px; background:var(--white);
+    cursor:pointer; text-align:left; width:100%; font-family:inherit; min-height:44px;
+  }
+  .deck-item:hover { border-color:var(--navy); }
+  .deck-info { flex:1; min-width:0; }
+  .deck-name { font-size:calc(14.5px * var(--a11y-scale)); font-weight:800; color:var(--navy); word-break:break-word; }
+  .deck-count { font-size:calc(12.5px * var(--a11y-scale)); color:var(--navy-soft); margin-top:2px; }
+  .deck-tag {
+    display:inline-block; font-size:calc(11.5px * var(--a11y-scale)); font-weight:700; color:#FFFFFF;
+    border-radius:999px; padding:4px 10px; margin-bottom:5px;
+  }
+
+  /* ---------- revision ---------- */
+  .review-progress {
+    display:flex; align-items:center; gap:12px; margin-bottom:16px;
+    font-size:calc(13.5px * var(--a11y-scale)); font-weight:700; color:var(--navy);
+  }
+  .review-bar { flex:1; height:10px; background:var(--bg); border-radius:999px; overflow:hidden; border:1px solid var(--track); }
+  .review-bar-fill { height:100%; background:var(--vert); width:0%; transition:width 0.3s ease; }
+  @media (prefers-reduced-motion: reduce) { .review-bar-fill { transition:none; } }
+
+  .flashcard {
+    position:relative; width:100%; min-height:260px; margin-bottom:18px;
+    border-radius:20px; border:3px solid var(--track);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:26px 22px; cursor:pointer; background:var(--white); text-align:center;
+  }
+  .flashcard:hover { border-color:var(--navy); }
+  .flashcard:focus-visible { outline:3px solid var(--navy); outline-offset:3px; }
+  .card-face-label {
+    position:absolute; top:12px; left:16px;
+    font-size:calc(11.5px * var(--a11y-scale)); font-weight:800; letter-spacing:1px;
+    text-transform:uppercase; color:var(--navy-soft);
+  }
+  .card-face-text {
+    font-size:calc(21px * var(--a11y-scale)); font-weight:700; line-height:1.45;
+    word-break:break-word; margin:0;
+  }
+  .card-face-img { max-width:100%; max-height:160px; border-radius:12px; margin-bottom:14px; object-fit:contain; }
+  .card-img-error {
+    font-size:calc(12.5px * var(--a11y-scale)); color:var(--rouge); background:var(--rouge-soft);
+    border-radius:10px; padding:8px 12px; margin-bottom:12px; line-height:1.4;
+  }
+  .flip-hint { font-size:calc(12.5px * var(--a11y-scale)); color:var(--navy-soft); margin-top:16px; font-style:italic; }
+
+  .review-actions { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
+  .review-done {
+    text-align:center; padding:26px 20px;
+    background:var(--vert-soft); border:2px solid var(--vert); border-radius:16px;
+  }
+  .review-done-title { font-size:calc(18px * var(--a11y-scale)); font-weight:800; color:var(--vert); margin-bottom:8px; }
+  .review-done-text { font-size:calc(14px * var(--a11y-scale)); color:var(--navy); line-height:1.5; margin-bottom:16px; }
+
+  /* ---------- import ---------- */
+  .import-preview {
+    font-size:calc(13px * var(--a11y-scale)); color:var(--navy); margin-top:10px;
+    background:var(--bg); border-radius:10px; padding:12px 14px; line-height:1.5;
+  }
+  .import-preview.error { color:var(--rouge); background:var(--rouge-soft); }
+  .template-box {
+    background:var(--bg); border:2px dashed var(--track); border-radius:12px;
+    padding:14px 16px; font-family:Consolas, monospace; font-size:calc(12.5px * var(--a11y-scale));
+    color:var(--navy); line-height:1.7; margin:10px 0 14px; overflow-x:auto; white-space:pre;
+  }
+
+  /* ---------- indicateur de sauvegarde ---------- */
+  .save-indicator {
+    position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(12px);
+    background:var(--vert-soft); color:var(--vert); border:2px solid var(--vert);
+    border-radius:999px; padding:9px 20px; font-size:13.5px; font-weight:700;
+    opacity:0; pointer-events:none; transition:opacity 0.25s ease, transform 0.25s ease; z-index:1500;
+  }
+  .save-indicator.show { opacity:1; transform:translateX(-50%) translateY(0); }
+  .save-indicator.save-error { background:var(--rouge-soft); color:var(--rouge); border-color:var(--rouge); }
+  @media (prefers-reduced-motion: reduce) { .save-indicator { transition:none; } }
+
+  .sr-only {
+    position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden;
+    clip:rect(0,0,0,0); white-space:nowrap; border:0;
+  }
+
+  footer { text-align:center; font-size:calc(12px * var(--a11y-scale)); color: var(--navy-soft); margin-top: 26px; }
+
+  @media print {
+    .a11y-bar, .tabs, .back-to-hub, .skip-link, .save-indicator, .btn-row, .card-item-actions { display:none !important; }
+  }
+</style>
+</head>
+<body>
+<!-- Les habitants de Mnemosia, partages par les pages d'outils.
+     A inclure juste apres <body> : les symboles sont invisibles,
+     seul le popup d'accueil les affiche. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+<defs>
+<symbol id="habitantA" viewBox="0 0 120 160">
+  <!-- exploratrice en combinaison claire -->
+  <defs>
+    <linearGradient id="combiA" x1="0%" y1="0%" x2="100%" y2="8%">
+      <stop offset="0%" stop-color="#FFFDF6"/><stop offset="34%" stop-color="#EDE4D2"/>
+      <stop offset="72%" stop-color="#C6B99E"/><stop offset="100%" stop-color="#8E836C"/>
+    </linearGradient>
+    <radialGradient id="peauA" cx="34%" cy="28%" r="72%">
+      <stop offset="0%" stop-color="#FFE0C2"/><stop offset="52%" stop-color="#F0C49A"/>
+      <stop offset="100%" stop-color="#C08B65"/>
+    </radialGradient>
+  </defs>
+  <ellipse cx="63" cy="153" rx="30" ry="6" fill="#5A431F" opacity="0.32"/>
+  <ellipse cx="60" cy="151" rx="22" ry="4" fill="#3E2C12" opacity="0.28"/>
+  <path d="M38 152 L36 96 Q36 78 60 78 Q84 78 84 96 L82 152 Z" fill="url(#combiA)" stroke="#12161E" stroke-width="1.6"/>
+  <path d="M60 78 Q36 78 36 96 L38 152 L60 152 Z" fill="#FFFDF6" opacity="0.35"/>
+  <path d="M74 84 Q84 92 84 96 L82 152 L72 152 Z" fill="#7E7360" opacity="0.4"/>
+  <path d="M46 82 L46 118 L74 118 L74 82 Q60 88 46 82 Z" fill="#DCD2BE" stroke="#12161E" stroke-width="1.1"/>
+  <rect x="44" y="118" width="32" height="9" rx="3" fill="#8A6A3A" stroke="#12161E" stroke-width="1.2"/>
+  <rect x="55" y="117" width="11" height="11" rx="2" fill="#C9A96E" stroke="#12161E" stroke-width="0.9"/>
+  <path d="M42 130 L54 130 L54 152 L42 152 Z" fill="#6E5A42" stroke="#12161E" stroke-width="1.1"/>
+  <path d="M66 130 L78 130 L78 152 L66 152 Z" fill="#6E5A42" stroke="#12161E" stroke-width="1.1"/>
+  <rect x="42" y="129" width="12" height="4" rx="1.5" fill="#4A3A28"/>
+  <rect x="66" y="129" width="12" height="4" rx="1.5" fill="#4A3A28"/>
+  <path d="M60 20 Q40 20 39 44 Q38 58 46 64 L74 64 Q82 58 81 44 Q80 20 60 20 Z" fill="#E5DBC6" stroke="#12161E" stroke-width="1.5"/>
+  <path d="M60 20 Q40 20 39 44 L44 44 Q45 26 60 26 Z" fill="#FFFDF6" opacity="0.5"/>
+  <ellipse cx="60" cy="48" rx="15" ry="17" fill="url(#peauA)" stroke="#12161E" stroke-width="1.4"/>
+  <circle cx="54" cy="46" r="2.4" fill="#2A1A12"/>
+  <circle cx="53.4" cy="45.2" r="0.9" fill="#FFFFFF"/>
+  <circle cx="66" cy="46" r="2.4" fill="#2A1A12"/>
+  <circle cx="65.4" cy="45.2" r="0.9" fill="#FFFFFF"/>
+  <path d="M49 41 Q54 38 58 40" stroke="#8A6642" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <path d="M62 40 Q66 38 71 41" stroke="#8A6642" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+    <ellipse cx="47" cy="52" rx="3.5" ry="2.5" fill="#E8A088" opacity="0.4"/>
+  <ellipse cx="73" cy="52" rx="3.5" ry="2.5" fill="#E8A088" opacity="0.4"/>
+  <path d="M78 84 L86 90 L84 152 L78 152 Z" fill="#8E836C" stroke="#12161E" stroke-width="1.1"/>
+  <path d="M74 118 L82 122 L82 128 L74 126 Z" fill="#6E5432" stroke="#12161E" stroke-width="0.9"/>
+  <path d="M54 130 L58 134 L58 152 L54 152 Z" fill="#4A3A28" opacity="0.7"/>
+  <path d="M78 130 L82 134 L82 152 L78 152 Z" fill="#4A3A28" opacity="0.7"/>
+  <ellipse cx="60" cy="64" rx="13" ry="4" fill="#C6B99E" opacity="0.5"/>
+  <path d="M46 40 Q52 36 58 38" stroke="#C0A88A" stroke-width="1.2" fill="none" opacity="0.5"/>
+  <path d="M60 54 L58 58 Q60 60 62 58 Z" fill="#D9A57A" opacity="0.65"/>
+  <ellipse cx="52" cy="44" rx="3.6" ry="2" fill="#FFFFFF" opacity="0.28"/>
+  <ellipse cx="68" cy="44" rx="3.6" ry="2" fill="#FFFFFF" opacity="0.28"/>
+  <path d="M45 48 Q43 51 45 54" stroke="#D9A57A" stroke-width="1.4" fill="none" opacity="0.5"/>
+  <path d="M75 48 Q77 51 75 54" stroke="#C08B65" stroke-width="1.4" fill="none" opacity="0.5"/>
+  <!-- modele du visage : lumiere haut-gauche, ombre bas-droite -->
+      <!-- arete du nez -->
+  <path d="M60 46 L59 53" stroke="#FFE0C2" stroke-width="1.6" opacity="0.6" stroke-linecap="round"/>
+  <path d="M61 46 L62 53" stroke="#8A6642" stroke-width="1.1" opacity="0.35" stroke-linecap="round"/>
+  <!-- narines -->
+  <ellipse cx="57.5" cy="55" rx="1.3" ry="0.9" fill="#8A6642" opacity="0.5"/>
+  <ellipse cx="62.5" cy="55" rx="1.3" ry="0.9" fill="#8A6642" opacity="0.5"/>
+  <!-- levres -->
+  <path d="M55 60 Q60 63 65 60" stroke="#8A6642" stroke-width="1.6" fill="none" opacity="0.62" stroke-linecap="round"/>
+    <!-- menton -->
+    <!-- paupieres -->
+      <!-- oreilles -->
+  <ellipse cx="43" cy="49" rx="3.2" ry="4.6" fill="#FFE0C2" stroke="#8A6642" stroke-width="0.9" opacity="0.85"/>
+  <ellipse cx="77" cy="49" rx="3.2" ry="4.6" fill="#C08B65" stroke="#8A6642" stroke-width="0.9" opacity="0.85"/>
+  <path d="M43 47 Q44 49 43 51" stroke="#8A6642" stroke-width="0.8" fill="none" opacity="0.4"/>
+</symbol>
+<symbol id="habitantB" viewBox="0 0 120 160">
+  <!-- pilote en tenue sombre, harnais croise -->
+  <defs>
+    <linearGradient id="combiB" x1="0%" y1="0%" x2="100%" y2="8%">
+      <stop offset="0%" stop-color="#6E7E9E"/><stop offset="34%" stop-color="#54627F"/>
+      <stop offset="72%" stop-color="#3A4660"/><stop offset="100%" stop-color="#232C40"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="63" cy="153" rx="30" ry="6" fill="#5A431F" opacity="0.32"/>
+  <ellipse cx="60" cy="151" rx="22" ry="4" fill="#3E2C12" opacity="0.28"/>
+  <path d="M38 152 L36 94 Q36 76 60 76 Q84 76 84 94 L82 152 Z" fill="url(#combiB)" stroke="#12161E" stroke-width="1.6"/>
+  <path d="M60 76 Q36 76 36 94 L38 152 L60 152 Z" fill="#7E8EAE" opacity="0.3"/>
+  <path d="M46 80 L60 96 L74 80" stroke="#C9A96E" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+  <circle cx="60" cy="98" r="4.5" fill="#C9A96E" stroke="#12161E" stroke-width="1"/>
+  <rect x="44" y="112" width="32" height="9" rx="3" fill="#1E2634" stroke="#12161E" stroke-width="1.2"/>
+  <rect x="55" y="111" width="11" height="11" rx="2" fill="#8592B0" stroke="#12161E" stroke-width="0.9"/>
+  <rect x="46" y="122" width="7" height="12" rx="2" fill="#8592B0" stroke="#12161E" stroke-width="0.9"/>
+  <path d="M42 132 L54 132 L54 152 L42 152 Z" fill="#2A3244" stroke="#12161E" stroke-width="1.1"/>
+  <path d="M66 132 L78 132 L78 152 L66 152 Z" fill="#2A3244" stroke="#12161E" stroke-width="1.1"/>
+  <ellipse cx="60" cy="48" rx="16" ry="18" fill="url(#peauA)" stroke="#12161E" stroke-width="1.4"/>
+  <path d="M43 44 Q46 24 60 24 Q74 24 77 44 Q70 32 60 32 Q50 32 43 44 Z" fill="#4A3A28" stroke="#12161E" stroke-width="1.2"/>
+  <path d="M43 44 Q46 24 60 24 L60 32 Q50 32 43 44 Z" fill="#6E5A42" opacity="0.5"/>
+  <circle cx="54" cy="48" r="2.4" fill="#2A1A12"/>
+  <circle cx="53.4" cy="47.2" r="0.9" fill="#FFFFFF"/>
+  <circle cx="66" cy="48" r="2.4" fill="#2A1A12"/>
+  <circle cx="65.4" cy="47.2" r="0.9" fill="#FFFFFF"/>
+  <path d="M49 42 Q54 39 58 41" stroke="#3A2A1C" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+  <path d="M62 41 Q66 39 71 42" stroke="#3A2A1C" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+    <path d="M78 82 L86 88 L84 152 L78 152 Z" fill="#232C40" stroke="#12161E" stroke-width="1.1"/>
+  <path d="M76 112 L84 116 L84 122 L76 120 Z" fill="#141A26" stroke="#12161E" stroke-width="0.9"/>
+  <path d="M54 132 L58 136 L58 152 L54 152 Z" fill="#1A2030" opacity="0.75"/>
+  <path d="M78 132 L82 136 L82 152 L78 152 Z" fill="#1A2030" opacity="0.75"/>
+  <ellipse cx="60" cy="66" rx="14" ry="4" fill="#3A4660" opacity="0.55"/>
+  <path d="M50 54 Q60 58 70 54" stroke="#8E9AB8" stroke-width="1.2" fill="none" opacity="0.4"/>
+  <path d="M60 56 L58 60 Q60 62 62 60 Z" fill="#D9A57A" opacity="0.65"/>
+  <ellipse cx="47" cy="54" rx="3.4" ry="2.4" fill="#E8A088" opacity="0.35"/>
+  <ellipse cx="73" cy="54" rx="3.4" ry="2.4" fill="#E8A088" opacity="0.35"/>
+  <path d="M45 50 Q43 53 45 56" stroke="#D9A57A" stroke-width="1.4" fill="none" opacity="0.5"/>
+  <path d="M75 50 Q77 53 75 56" stroke="#C08B65" stroke-width="1.4" fill="none" opacity="0.5"/>
+  <!-- modele du visage : lumiere haut-gauche, ombre bas-droite -->
+      <!-- arete du nez -->
+  <path d="M60 46 L59 53" stroke="#FFE0C2" stroke-width="1.6" opacity="0.6" stroke-linecap="round"/>
+  <path d="M61 46 L62 53" stroke="#8A6642" stroke-width="1.1" opacity="0.35" stroke-linecap="round"/>
+  <!-- narines -->
+  <ellipse cx="57.5" cy="55" rx="1.3" ry="0.9" fill="#8A6642" opacity="0.5"/>
+  <ellipse cx="62.5" cy="55" rx="1.3" ry="0.9" fill="#8A6642" opacity="0.5"/>
+  <!-- levres -->
+  <path d="M55 60 Q60 63 65 60" stroke="#8A6642" stroke-width="1.6" fill="none" opacity="0.62" stroke-linecap="round"/>
+    <!-- menton -->
+    <!-- paupieres -->
+      <!-- oreilles -->
+  <ellipse cx="43" cy="49" rx="3.2" ry="4.6" fill="#FFE0C2" stroke="#8A6642" stroke-width="0.9" opacity="0.85"/>
+  <ellipse cx="77" cy="49" rx="3.2" ry="4.6" fill="#C08B65" stroke="#8A6642" stroke-width="0.9" opacity="0.85"/>
+  <path d="M43 47 Q44 49 43 51" stroke="#8A6642" stroke-width="0.8" fill="none" opacity="0.4"/>
+</symbol>
+<symbol id="habitantC" viewBox="0 0 120 160">
+  <!-- droide de service, dome et roulettes -->
+  <defs>
+    <linearGradient id="corpsC" x1="0%" y1="0%" x2="100%" y2="6%">
+      <stop offset="0%" stop-color="#EDF2F8"/><stop offset="32%" stop-color="#D6DEE8"/>
+      <stop offset="70%" stop-color="#A8B4C4"/><stop offset="100%" stop-color="#78849A"/>
+    </linearGradient>
+    <radialGradient id="domeC" cx="32%" cy="24%" r="76%">
+      <stop offset="0%" stop-color="#FFFFFF"/><stop offset="46%" stop-color="#E3EAF2"/>
+      <stop offset="100%" stop-color="#8E9AAC"/>
+    </radialGradient>
+  </defs>
+  <ellipse cx="63" cy="153" rx="27" ry="6" fill="#5A431F" opacity="0.32"/>
+  <ellipse cx="60" cy="151" rx="20" ry="4" fill="#3E2C12" opacity="0.28"/>
+  <path d="M40 148 Q36 110 44 92 L76 92 Q84 110 80 148 Q80 152 74 152 L46 152 Q40 152 40 148 Z" fill="url(#corpsC)" stroke="#12161E" stroke-width="1.6"/>
+  <path d="M40 148 Q36 110 44 92 L60 92 L60 152 L46 152 Q40 152 40 148 Z" fill="#FFFFFF" opacity="0.4"/>
+  <rect x="47" y="102" width="26" height="18" rx="3" fill="#2C3A50" stroke="#12161E" stroke-width="1.2"/>
+  <circle cx="55" cy="111" r="3.5" fill="#3FCBAA"/>
+  <circle cx="54.2" cy="110" r="1.2" fill="#DFFFF6"/>
+  <circle cx="66" cy="111" r="3.5" fill="#E0591F"/>
+  <circle cx="65.2" cy="110" r="1.2" fill="#FFE0CC"/>
+  <rect x="45" y="126" width="30" height="6" rx="2.5" fill="#8592B0" stroke="#12161E" stroke-width="1"/>
+  <rect x="45" y="136" width="30" height="6" rx="2.5" fill="#8592B0" stroke="#12161E" stroke-width="1"/>
+  <path d="M42 92 Q42 60 60 60 Q78 60 78 92 Z" fill="url(#domeC)" stroke="#12161E" stroke-width="1.6"/>
+  <ellipse cx="52" cy="72" rx="9" ry="6" fill="#FFFFFF" opacity="0.65" transform="rotate(-24 52 72)"/>
+  <circle cx="60" cy="76" r="10" fill="#1E2A38" stroke="#12161E" stroke-width="1.4"/>
+  <circle cx="57" cy="73" r="4" fill="#8FD9F0"/>
+  <circle cx="55.6" cy="71.6" r="1.6" fill="#FFFFFF"/>
+  <rect x="58" y="44" width="4" height="18" rx="2" fill="#8592B0" stroke="#12161E" stroke-width="0.9"/>
+  <circle cx="60" cy="42" r="4" fill="#C0392B" stroke="#12161E" stroke-width="1"/>
+  <circle cx="59" cy="41" r="1.4" fill="#FFD0CA"/>
+  <circle cx="47" cy="146" r="5" fill="#3A4660" stroke="#12161E" stroke-width="1.1"/>
+  <circle cx="73" cy="146" r="5" fill="#3A4660" stroke="#12161E" stroke-width="1.1"/>
+  <path d="M76 92 L84 98 L80 148 L76 148 Z" fill="#78849A" stroke="#12161E" stroke-width="1.1"/>
+  <path d="M73 126 L81 130 L81 134 L73 132 Z" fill="#5E6A80" stroke="#12161E" stroke-width="0.9"/>
+  <path d="M73 136 L81 140 L81 144 L73 142 Z" fill="#5E6A80" stroke="#12161E" stroke-width="0.9"/>
+  <ellipse cx="60" cy="94" rx="17" ry="4" fill="#8E9AAC" opacity="0.5"/>
+  <path d="M78 60 L84 66 L84 92 L78 92 Z" fill="#6E7A90" opacity="0.7"/>
+</symbol>
+<symbol id="habitantD" viewBox="0 0 120 160">
+  <!-- gardien en armure, casque a visiere -->
+  <defs>
+    <linearGradient id="armureD" x1="0%" y1="0%" x2="100%" y2="6%">
+      <stop offset="0%" stop-color="#FFFFFF"/><stop offset="30%" stop-color="#EDF2F8"/>
+      <stop offset="68%" stop-color="#C0CBD8"/><stop offset="100%" stop-color="#8A96A6"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="63" cy="153" rx="31" ry="6" fill="#5A431F" opacity="0.32"/>
+  <ellipse cx="60" cy="151" rx="23" ry="4" fill="#3E2C12" opacity="0.28"/>
+  <path d="M36 152 L34 94 Q34 74 60 74 Q86 74 86 94 L84 152 Z" fill="url(#armureD)" stroke="#12161E" stroke-width="1.6"/>
+  <path d="M60 74 Q34 74 34 94 L36 152 L60 152 Z" fill="#FFFFFF" opacity="0.45"/>
+  <path d="M44 96 Q60 104 76 96 L74 116 Q60 122 46 116 Z" fill="#C7D0DA" stroke="#12161E" stroke-width="1.2"/>
+  <path d="M52 100 L60 108 L68 100" stroke="#8A96A6" stroke-width="1.6" fill="none"/>
+  <rect x="42" y="122" width="36" height="9" rx="3" fill="#3A4660" stroke="#12161E" stroke-width="1.2"/>
+  <rect x="54" y="121" width="12" height="11" rx="2" fill="#C9A96E" stroke="#12161E" stroke-width="0.9"/>
+  <path d="M42 134 L54 134 L54 152 L42 152 Z" fill="#5A6678" stroke="#12161E" stroke-width="1.1"/>
+  <path d="M66 134 L78 134 L78 152 L66 152 Z" fill="#5A6678" stroke="#12161E" stroke-width="1.1"/>
+  <path d="M60 18 Q38 18 37 46 Q37 60 46 66 L74 66 Q83 60 83 46 Q82 18 60 18 Z" fill="#F2F6FA" stroke="#12161E" stroke-width="1.6"/>
+  <path d="M60 18 Q38 18 37 46 L42 46 Q43 26 60 26 Z" fill="#FFFFFF" opacity="0.6"/>
+  <path d="M44 40 Q60 34 76 40 L76 54 Q60 60 44 54 Z" fill="#1E2A38" stroke="#12161E" stroke-width="1.3"/>
+  <path d="M47 43 Q54 40 60 39 L60 52 Q52 51 47 48 Z" fill="#5C7A9E" opacity="0.6"/>
+  <path d="M60 18 Q60 12 60 8" stroke="#C9A96E" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="60" cy="7" r="3" fill="#C9A96E" stroke="#12161E" stroke-width="0.9"/>
+  <path d="M80 82 L88 88 L86 152 L80 152 Z" fill="#8A96A6" stroke="#12161E" stroke-width="1.1"/>
+  <path d="M76 122 L84 126 L84 132 L76 130 Z" fill="#2A3244" stroke="#12161E" stroke-width="0.9"/>
+  <path d="M54 134 L58 138 L58 152 L54 152 Z" fill="#3E4A5C" opacity="0.75"/>
+  <path d="M78 134 L82 138 L82 152 L78 152 Z" fill="#3E4A5C" opacity="0.75"/>
+  <path d="M76 22 L84 28 L82 62 L76 66 Z" fill="#C0CBD8" stroke="#12161E" stroke-width="1"/>
+  <ellipse cx="60" cy="70" rx="15" ry="4" fill="#A8B4C4" opacity="0.5"/>
+  <path d="M60 52 L58 56 Q60 58 62 56 Z" fill="#C0CBD8" opacity="0.5"/>
+  <ellipse cx="52" cy="46" rx="4" ry="2.2" fill="#8FB4D8" opacity="0.4"/>
+  <ellipse cx="68" cy="46" rx="4" ry="2.2" fill="#8FB4D8" opacity="0.4"/>
+</symbol>
+<symbol id="habitantE" viewBox="0 0 120 160">
+  <!-- sage en longue robe violette -->
+  <defs>
+    <linearGradient id="robeE" x1="0%" y1="0%" x2="100%" y2="8%">
+      <stop offset="0%" stop-color="#A894C4"/><stop offset="32%" stop-color="#8A76A8"/>
+      <stop offset="70%" stop-color="#665488"/><stop offset="100%" stop-color="#3E3260"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="63" cy="153" rx="33" ry="6" fill="#5A431F" opacity="0.32"/>
+  <ellipse cx="60" cy="151" rx="25" ry="4" fill="#3E2C12" opacity="0.28"/>
+  <path d="M30 152 Q28 108 42 84 Q50 74 60 74 Q70 74 78 84 Q92 108 90 152 Z" fill="url(#robeE)" stroke="#12161E" stroke-width="1.6"/>
+  <path d="M30 152 Q28 108 42 84 Q50 74 60 74 L60 152 Z" fill="#B8A4D4" opacity="0.35"/>
+  <path d="M48 84 Q60 92 72 84 L70 152 L50 152 Z" fill="#4E3F66" stroke="#12161E" stroke-width="1.1"/>
+  <rect x="44" y="112" width="32" height="9" rx="3" fill="#C9A96E" stroke="#12161E" stroke-width="1.2"/>
+  <rect x="55" y="111" width="11" height="11" rx="2" fill="#8A6A3A" stroke="#12161E" stroke-width="0.9"/>
+  <ellipse cx="60" cy="46" rx="16" ry="18" fill="url(#peauA)" stroke="#12161E" stroke-width="1.4"/>
+  <path d="M44 44 Q46 24 60 24 Q74 24 76 44 Q68 32 60 32 Q52 32 44 44 Z" fill="#DDE2E8" stroke="#12161E" stroke-width="1.2"/>
+  <path d="M44 44 Q46 24 60 24 L60 32 Q52 32 44 44 Z" fill="#FFFFFF" opacity="0.5"/>
+  <circle cx="54" cy="46" r="2.4" fill="#2A1A12"/>
+  <circle cx="53.4" cy="45.2" r="0.9" fill="#FFFFFF"/>
+  <circle cx="66" cy="46" r="2.4" fill="#2A1A12"/>
+  <circle cx="65.4" cy="45.2" r="0.9" fill="#FFFFFF"/>
+  <path d="M48 39 Q54 36 59 38" stroke="#E8ECF0" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+  <path d="M61 38 Q66 36 72 39" stroke="#E8ECF0" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+  <path d="M48 56 Q50 78 60 84 Q70 78 72 56 Q66 62 60 62 Q54 62 48 56 Z" fill="#E8ECF0" stroke="#C0CAD6" stroke-width="0.9"/>
+  <path d="M56 64 Q58 76 60 82" stroke="#B8C4D0" stroke-width="1.2" fill="none" opacity="0.6"/>
+  <path d="M64 64 Q62 76 60 82" stroke="#B8C4D0" stroke-width="1.2" fill="none" opacity="0.6"/>
+  <path d="M88 96 L88 152" stroke="#8A6A3A" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="88" cy="92" r="6" fill="#C9A96E" stroke="#12161E" stroke-width="1.1"/>
+  <path d="M84 88 L92 96 L90 152 L84 152 Z" fill="#3E3260" stroke="#12161E" stroke-width="1.1"/>
+  <path d="M74 112 L82 116 L82 122 L74 120 Z" fill="#8A6A3A" stroke="#12161E" stroke-width="0.9"/>
+  <ellipse cx="60" cy="86" rx="17" ry="4" fill="#665488" opacity="0.5"/>
+  <path d="M50 90 Q60 96 70 90" stroke="#B8A4D4" stroke-width="1.2" fill="none" opacity="0.4"/>
+  <path d="M52 120 Q60 126 68 120" stroke="#8A76A8" stroke-width="1.1" fill="none" opacity="0.35"/>
+  <path d="M60 52 L58 56 Q60 58 62 56 Z" fill="#D9A57A" opacity="0.65"/>
+  <path d="M44 48 Q42 51 44 54" stroke="#D9A57A" stroke-width="1.4" fill="none" opacity="0.5"/>
+  <path d="M76 48 Q78 51 76 54" stroke="#C08B65" stroke-width="1.4" fill="none" opacity="0.5"/>
+  <ellipse cx="52" cy="42" rx="3.4" ry="1.9" fill="#FFFFFF" opacity="0.26"/>
+  <!-- modele du visage : lumiere haut-gauche, ombre bas-droite -->
+      <!-- arete du nez -->
+  <path d="M60 44 L59 51" stroke="#FFE0C2" stroke-width="1.6" opacity="0.6" stroke-linecap="round"/>
+  <path d="M61 44 L62 51" stroke="#8A6642" stroke-width="1.1" opacity="0.35" stroke-linecap="round"/>
+  <!-- narines -->
+  <ellipse cx="57.5" cy="53" rx="1.3" ry="0.9" fill="#8A6642" opacity="0.5"/>
+  <ellipse cx="62.5" cy="53" rx="1.3" ry="0.9" fill="#8A6642" opacity="0.5"/>
+  <!-- levres -->
+  <path d="M55 58 Q60 61 65 58" stroke="#8A6642" stroke-width="1.6" fill="none" opacity="0.62" stroke-linecap="round"/>
+    <!-- menton -->
+    <!-- paupieres -->
+      <!-- oreilles -->
+  <ellipse cx="43" cy="47" rx="3.2" ry="4.6" fill="#FFE0C2" stroke="#8A6642" stroke-width="0.9" opacity="0.85"/>
+  <ellipse cx="77" cy="47" rx="3.2" ry="4.6" fill="#C08B65" stroke="#8A6642" stroke-width="0.9" opacity="0.85"/>
+  <path d="M43 45 Q44 47 43 49" stroke="#8A6642" stroke-width="0.8" fill="none" opacity="0.4"/>
+</symbol>
+<symbol id="habitantF" viewBox="0 0 120 160">
+  <!-- mecanicienne en salopette orange -->
+  <defs>
+    <linearGradient id="salopF" x1="0%" y1="0%" x2="100%" y2="8%">
+      <stop offset="0%" stop-color="#F0925E"/><stop offset="32%" stop-color="#D67848"/>
+      <stop offset="70%" stop-color="#A85832"/><stop offset="100%" stop-color="#6E3A1E"/>
+    </linearGradient>
+  </defs>
+  <ellipse cx="63" cy="153" rx="30" ry="6" fill="#5A431F" opacity="0.32"/>
+  <ellipse cx="60" cy="151" rx="22" ry="4" fill="#3E2C12" opacity="0.28"/>
+  <path d="M38 152 L36 96 Q36 78 60 78 Q84 78 84 96 L82 152 Z" fill="url(#salopF)" stroke="#12161E" stroke-width="1.6"/>
+  <path d="M60 78 Q36 78 36 96 L38 152 L60 152 Z" fill="#FFAE7E" opacity="0.3"/>
+  <path d="M46 78 L46 100 L74 100 L74 78 Q60 84 46 78 Z" fill="#A24E2C" stroke="#12161E" stroke-width="1.1"/>
+  <path d="M50 78 L50 62" stroke="#A24E2C" stroke-width="4" stroke-linecap="round"/>
+  <path d="M70 78 L70 62" stroke="#A24E2C" stroke-width="4" stroke-linecap="round"/>
+  <rect x="42" y="114" width="36" height="9" rx="3" fill="#5C4326" stroke="#12161E" stroke-width="1.2"/>
+  <rect x="46" y="123" width="6" height="12" rx="2" fill="#8592B0" stroke="#12161E" stroke-width="0.9"/>
+  <rect x="56" y="123" width="6" height="10" rx="2" fill="#C9A96E" stroke="#12161E" stroke-width="0.9"/>
+  <path d="M42 136 L54 136 L54 152 L42 152 Z" fill="#4A3218" stroke="#12161E" stroke-width="1.1"/>
+  <path d="M66 136 L78 136 L78 152 L66 152 Z" fill="#4A3218" stroke="#12161E" stroke-width="1.1"/>
+  <ellipse cx="60" cy="50" rx="16" ry="18" fill="url(#peauA)" stroke="#12161E" stroke-width="1.4"/>
+  <path d="M44 48 Q46 28 60 28 Q74 28 76 48 Q68 36 60 36 Q52 36 44 48 Z" fill="#8A5A3A" stroke="#12161E" stroke-width="1.2"/>
+  <circle cx="79" cy="42" r="8" fill="#8A5A3A" stroke="#12161E" stroke-width="1.2"/>
+  <circle cx="77" cy="40" r="3" fill="#A6714A" opacity="0.6"/>
+  <circle cx="54" cy="50" r="2.4" fill="#2A1A12"/>
+  <circle cx="53.4" cy="49.2" r="0.9" fill="#FFFFFF"/>
+  <circle cx="66" cy="50" r="2.4" fill="#2A1A12"/>
+  <circle cx="65.4" cy="49.2" r="0.9" fill="#FFFFFF"/>
+  <path d="M49 44 Q54 41 58 43" stroke="#6E4428" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+  <path d="M62 43 Q66 41 71 44" stroke="#6E4428" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+    <path d="M78 84 L86 90 L84 152 L78 152 Z" fill="#6E3A1E" stroke="#12161E" stroke-width="1.1"/>
+  <path d="M76 114 L84 118 L84 124 L76 122 Z" fill="#3E2C14" stroke="#12161E" stroke-width="0.9"/>
+  <path d="M54 136 L58 140 L58 152 L54 152 Z" fill="#301F0E" opacity="0.75"/>
+  <path d="M78 136 L82 140 L82 152 L78 152 Z" fill="#301F0E" opacity="0.75"/>
+  <ellipse cx="60" cy="68" rx="14" ry="4" fill="#A85832" opacity="0.5"/>
+  <path d="M48 88 Q60 94 72 88" stroke="#FFAE7E" stroke-width="1.2" fill="none" opacity="0.4"/>
+  <path d="M60 56 L58 60 Q60 62 62 60 Z" fill="#D9A57A" opacity="0.65"/>
+  <ellipse cx="47" cy="56" rx="3.4" ry="2.4" fill="#E8A088" opacity="0.4"/>
+  <ellipse cx="73" cy="56" rx="3.4" ry="2.4" fill="#E8A088" opacity="0.4"/>
+  <path d="M45 52 Q43 55 45 58" stroke="#D9A57A" stroke-width="1.4" fill="none" opacity="0.5"/>
+  <!-- modele du visage : lumiere haut-gauche, ombre bas-droite -->
+    <ellipse cx="68" cy="54" rx="9" ry="10" fill="#B87E52" opacity="0.3"/>
+  <!-- arete du nez -->
+  <path d="M60 48 L59 55" stroke="#FFE0C2" stroke-width="1.6" opacity="0.6" stroke-linecap="round"/>
+  <path d="M61 48 L62 55" stroke="#7E5432" stroke-width="1.1" opacity="0.35" stroke-linecap="round"/>
+  <!-- narines -->
+  <ellipse cx="57.5" cy="57" rx="1.3" ry="0.9" fill="#7E5432" opacity="0.5"/>
+  <ellipse cx="62.5" cy="57" rx="1.3" ry="0.9" fill="#7E5432" opacity="0.5"/>
+  <!-- levres -->
+  <path d="M55 62 Q60 65 65 62" stroke="#7E5432" stroke-width="1.6" fill="none" opacity="0.62" stroke-linecap="round"/>
+    <!-- menton -->
+    <!-- paupieres -->
+      <!-- oreilles -->
+  <ellipse cx="43" cy="51" rx="3.2" ry="4.6" fill="#FFE0C2" stroke="#7E5432" stroke-width="0.9" opacity="0.85"/>
+  <ellipse cx="77" cy="51" rx="3.2" ry="4.6" fill="#B87E52" stroke="#7E5432" stroke-width="0.9" opacity="0.85"/>
+  <path d="M43 49 Q44 51 43 53" stroke="#7E5432" stroke-width="0.8" fill="none" opacity="0.4"/>
+</symbol>
+<symbol id="habitantG" viewBox="0 0 120 160">
+  <!-- eclaireur en tenue verte, avec sac -->
+  <!-- ombre de contact -->
+  <ellipse cx="60" cy="151" rx="21" ry="4" fill="#3E2C12" opacity="0.28"/>
+  <ellipse cx="62" cy="153" rx="30" ry="6" fill="#5A431F" opacity="0.3"/>
+  <path d="M38 152 L35 96 Q35 78 60 78 Q85 78 85 96 L82 152 Z" fill="#4A7C59" stroke="#12161E" stroke-width="1.6"/>
+  <path d="M38 152 L35 96 Q35 78 60 78 L60 152 Z" fill="#5E9670" stroke="#12161E" stroke-width="1.6"/>
+  <path d="M82 84 Q94 88 94 104 Q94 118 84 120 L82 96 Z" fill="#3A5F45" stroke="#12161E" stroke-width="1.6"/>
+  <rect x="44" y="112" width="32" height="8" rx="3" fill="#2E4A38" stroke="#12161E" stroke-width="1.6"/>
+  <circle cx="60" cy="116" r="3.5" fill="#C9A96E" stroke="#12161E" stroke-width="1.6"/>
+  <!-- tete, bandeau -->
+  <ellipse cx="60" cy="50" rx="16" ry="18" fill="#C89060" stroke="#12161E" stroke-width="1.6"/>
+  <path d="M44 46 Q46 28 60 28 Q74 28 76 46 Q68 34 60 34 Q52 34 44 46 Z" fill="#2E2018" stroke="#12161E" stroke-width="1.6"/>
+  <rect x="43" y="42" width="34" height="6" rx="3" fill="#C0623B" stroke="#12161E" stroke-width="1.6"/>
+  <circle cx="54" cy="52" r="2.4" fill="#2A1A12" stroke="#12161E" stroke-width="1.6"/>
+  <circle cx="53.4" cy="51.2" r="0.9" fill="#FFFFFF"/>
+  <circle cx="66" cy="52" r="2.4" fill="#2A1A12" stroke="#12161E" stroke-width="1.6"/>
+  <circle cx="65.4" cy="51.2" r="0.9" fill="#FFFFFF"/>
+  <path d="M55 61 Q60 64 65 61" stroke="#9E6C42" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+  <path d="M42 132 L54 132 L54 152 L42 152 Z" fill="#2E4A38" stroke="#12161E" stroke-width="1.1"/>
+  <path d="M66 132 L78 132 L78 152 L66 152 Z" fill="#2E4A38" stroke="#12161E" stroke-width="1.1"/>
+  <path d="M60 78 Q36 78 36 96 L38 152 L60 152 Z" fill="#7EC098" opacity="0.28"/>
+  <path d="M49 46 Q54 43 58 45" stroke="#1E1610" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+  <path d="M62 45 Q66 43 71 46" stroke="#1E1610" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+  <ellipse cx="47" cy="56" rx="3.5" ry="2.5" fill="#B06848" opacity="0.35"/>
+  <ellipse cx="73" cy="56" rx="3.5" ry="2.5" fill="#B06848" opacity="0.35"/>
+  <!-- cote droit en perspective cavaliere -->
+  <path d="M80 84 L88 92 L86 152 L80 152 Z" fill="#2E4A38" stroke="#12161E" stroke-width="1.1"/>
+  <path d="M76 114 L84 118 L84 124 L76 122 Z" fill="#2E4A38" stroke="#12161E" stroke-width="0.9"/>
+  <ellipse cx="60" cy="80" rx="15" ry="4" fill="#3A5F45" opacity="0.5"/>
+  <path d="M50 96 Q60 102 70 96" stroke="#3A5F45" stroke-width="1.2" fill="none" opacity="0.4"/>
+  <path d="M54 134 L58 138 L58 152 L54 152 Z" fill="#2E4A38" opacity="0.7"/>
+  <path d="M78 134 L82 138 L82 152 L78 152 Z" fill="#2E4A38" opacity="0.7"/>
+  <path d="M60 54 L58 58 Q60 60 62 58 Z" fill="#C99870" opacity="0.6"/>
+  <ellipse cx="47" cy="56" rx="3.4" ry="2.3" fill="#E8A088" opacity="0.34"/>
+  <ellipse cx="73" cy="56" rx="3.4" ry="2.3" fill="#E8A088" opacity="0.34"/>
+  <path d="M45 50 Q43 53 45 56" stroke="#C99870" stroke-width="1.3" fill="none" opacity="0.45"/>
+  <path d="M75 50 Q77 53 75 56" stroke="#B08560" stroke-width="1.3" fill="none" opacity="0.45"/>
+  <!-- modele du visage : lumiere haut-gauche, ombre bas-droite -->
+      <!-- arete du nez -->
+  <path d="M60 50 L59 57" stroke="#F4CFA0" stroke-width="1.6" opacity="0.6" stroke-linecap="round"/>
+  <path d="M61 50 L62 57" stroke="#6E4428" stroke-width="1.1" opacity="0.35" stroke-linecap="round"/>
+  <!-- narines -->
+  <ellipse cx="57.5" cy="59" rx="1.3" ry="0.9" fill="#6E4428" opacity="0.5"/>
+  <ellipse cx="62.5" cy="59" rx="1.3" ry="0.9" fill="#6E4428" opacity="0.5"/>
+  <!-- levres -->
+  <path d="M55 64 Q60 67 65 64" stroke="#6E4428" stroke-width="1.6" fill="none" opacity="0.62" stroke-linecap="round"/>
+    <!-- menton -->
+    <!-- paupieres -->
+      <!-- oreilles -->
+  <ellipse cx="43" cy="53" rx="3.2" ry="4.6" fill="#F4CFA0" stroke="#6E4428" stroke-width="0.9" opacity="0.85"/>
+  <ellipse cx="77" cy="53" rx="3.2" ry="4.6" fill="#A8724A" stroke="#6E4428" stroke-width="0.9" opacity="0.85"/>
+  <path d="M43 51 Q44 53 43 55" stroke="#6E4428" stroke-width="0.8" fill="none" opacity="0.4"/>
+</symbol>
+<symbol id="habitantH" viewBox="0 0 120 160">
+  <!-- veilleuse en cape sombre, capuche relevee et regard lumineux -->
+  <!-- ombre de contact -->
+  <ellipse cx="60" cy="151" rx="21" ry="4" fill="#3E2C12" opacity="0.28"/>
+  <ellipse cx="62" cy="153" rx="32" ry="6" fill="#5A431F" opacity="0.3"/>
+  <path d="M28 152 Q26 106 42 82 Q50 72 60 72 Q70 72 78 82 Q94 106 92 152 Z" fill="#2E3A52" stroke="#12161E" stroke-width="1.6"/>
+  <path d="M28 152 Q26 106 42 82 Q50 72 60 72 L60 152 Z" fill="#3E4A66" stroke="#12161E" stroke-width="1.6"/>
+  <path d="M60 72 Q42 74 40 96 Q39 110 44 118 L48 92 Q50 80 60 78 Q70 80 72 92 L76 118 Q81 110 80 96 Q78 74 60 72 Z" fill="#232C40" stroke="#12161E" stroke-width="1.6"/>
+  <rect x="44" y="112" width="32" height="8" rx="3" fill="#8A6A3A" stroke="#12161E" stroke-width="1.6"/>
+  <!-- capuche, visage dans l'ombre -->
+  <path d="M60 20 Q38 20 37 48 Q37 64 47 70 L73 70 Q83 64 83 48 Q82 20 60 20 Z" fill="#232C40" stroke="#12161E" stroke-width="1.6"/>
+  <ellipse cx="60" cy="50" rx="14" ry="16" fill="#5E5044" stroke="#12161E" stroke-width="1.6"/>
+  <circle cx="54" cy="48" r="2.8" fill="#5FE0C4" stroke="#12161E" stroke-width="1.6"/>
+  <circle cx="66" cy="48" r="2.8" fill="#5FE0C4" stroke="#12161E" stroke-width="1.6"/>
+  <path d="M42 132 L54 132 L54 152 L42 152 Z" fill="#1A2234" stroke="#12161E" stroke-width="1.1"/>
+  <path d="M66 132 L78 132 L78 152 L66 152 Z" fill="#1A2234" stroke="#12161E" stroke-width="1.1"/>
+  <path d="M60 72 Q34 74 32 100 L34 152 L60 152 Z" fill="#5E6E90" opacity="0.25"/>
+  <rect x="44" y="112" width="32" height="9" rx="3" fill="#8A6A3A" stroke="#12161E" stroke-width="1.2"/>
+  <rect x="55" y="111" width="11" height="11" rx="2" fill="#C9A96E" stroke="#12161E" stroke-width="0.9"/>
+  <circle cx="54" cy="48" r="3" fill="#5FE0C4"/>
+  <circle cx="66" cy="48" r="3" fill="#5FE0C4"/>
+  <circle cx="53" cy="47" r="1.1" fill="#DFFFF6"/>
+  <!-- cote droit en perspective cavaliere -->
+  <path d="M80 84 L88 92 L86 152 L80 152 Z" fill="#141A26" stroke="#12161E" stroke-width="1.1"/>
+  <path d="M76 114 L84 118 L84 124 L76 122 Z" fill="#141A26" stroke="#12161E" stroke-width="0.9"/>
+  <ellipse cx="60" cy="80" rx="15" ry="4" fill="#232C40" opacity="0.5"/>
+  <path d="M50 96 Q60 102 70 96" stroke="#232C40" stroke-width="1.2" fill="none" opacity="0.4"/>
+  <path d="M54 134 L58 138 L58 152 L54 152 Z" fill="#141A26" opacity="0.7"/>
+  <path d="M78 134 L82 138 L82 152 L78 152 Z" fill="#141A26" opacity="0.7"/>
+  <!-- modele du visage : lumiere haut-gauche, ombre bas-droite -->
+      <!-- arete du nez -->
+  <path d="M60 48 L59 55" stroke="#E8C4A0" stroke-width="1.6" opacity="0.6" stroke-linecap="round"/>
+  <path d="M61 48 L62 55" stroke="#6E4E38" stroke-width="1.1" opacity="0.35" stroke-linecap="round"/>
+  <!-- narines -->
+  <ellipse cx="57.5" cy="57" rx="1.3" ry="0.9" fill="#6E4E38" opacity="0.5"/>
+  <ellipse cx="62.5" cy="57" rx="1.3" ry="0.9" fill="#6E4E38" opacity="0.5"/>
+  <!-- levres -->
+  <path d="M55 62 Q60 65 65 62" stroke="#6E4E38" stroke-width="1.6" fill="none" opacity="0.62" stroke-linecap="round"/>
+    <!-- menton -->
+    <!-- paupieres -->
+      <!-- oreilles -->
+  <ellipse cx="43" cy="51" rx="3.2" ry="4.6" fill="#E8C4A0" stroke="#6E4E38" stroke-width="0.9" opacity="0.85"/>
+  <ellipse cx="77" cy="51" rx="3.2" ry="4.6" fill="#A8785A" stroke="#6E4E38" stroke-width="0.9" opacity="0.85"/>
+  <path d="M43 49 Q44 51 43 53" stroke="#6E4E38" stroke-width="0.8" fill="none" opacity="0.4"/>
+</symbol>
+<symbol id="habitantI" viewBox="0 0 120 160">
+  <!-- botaniste en tablier, avec une plante -->
+  <!-- ombre de contact -->
+  <ellipse cx="60" cy="151" rx="21" ry="4" fill="#3E2C12" opacity="0.28"/>
+  <ellipse cx="62" cy="153" rx="30" ry="6" fill="#5A431F" opacity="0.3"/>
+  <path d="M38 152 L35 96 Q35 78 60 78 Q85 78 85 96 L82 152 Z" fill="#7A9E4A" stroke="#12161E" stroke-width="1.6"/>
+  <path d="M38 152 L35 96 Q35 78 60 78 L60 152 Z" fill="#93B85E" stroke="#12161E" stroke-width="1.3"/>
+  <path d="M46 90 L46 128 L74 128 L74 90 Q60 96 46 90 Z" fill="#E8DCC0" stroke="#12161E" stroke-width="1.2"/>
+  <rect x="44" y="128" width="32" height="8" rx="3" fill="#5C4326" stroke="#12161E" stroke-width="1.2"/>
+  <ellipse cx="60" cy="50" rx="16" ry="18" fill="#E8B892" stroke="#12161E" stroke-width="1.4"/>
+  <path d="M44 46 Q46 26 60 26 Q74 26 76 46 Q68 34 60 34 Q52 34 44 46 Z" fill="#6E4A2A" stroke="#12161E" stroke-width="1.3"/>
+  <circle cx="54" cy="50" r="2.4" fill="#2A1A12" stroke="#12161E" stroke-width="1.3"/>
+  <circle cx="53.4" cy="49.2" r="0.9" fill="#FFFFFF"/>
+  <circle cx="66" cy="50" r="2.4" fill="#2A1A12" stroke="#12161E" stroke-width="1.3"/>
+  <circle cx="65.4" cy="49.2" r="0.9" fill="#FFFFFF"/>
+  <path d="M86 104 Q94 92 92 78 Q86 88 84 98 Z" fill="#4A7C2A" stroke="#12161E" stroke-width="1"/>
+  <path d="M42 132 L54 132 L54 152 L42 152 Z" fill="#4A6E32" stroke="#12161E" stroke-width="1.1"/>
+  <path d="M66 132 L78 132 L78 152 L66 152 Z" fill="#4A6E32" stroke="#12161E" stroke-width="1.1"/>
+  <path d="M60 78 Q35 78 35 96 L38 152 L60 152 Z" fill="#A8CE7E" opacity="0.3"/>
+  <path d="M49 42 Q54 39 58 41" stroke="#4A2E18" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+  <path d="M62 41 Q66 39 71 42" stroke="#4A2E18" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+    <!-- cote droit en perspective cavaliere -->
+  <path d="M80 84 L88 92 L86 152 L80 152 Z" fill="#3A5F28" stroke="#12161E" stroke-width="1.1"/>
+  <path d="M76 114 L84 118 L84 124 L76 122 Z" fill="#3A5F28" stroke="#12161E" stroke-width="0.9"/>
+  <ellipse cx="60" cy="80" rx="15" ry="4" fill="#4A7C2A" opacity="0.5"/>
+  <path d="M50 96 Q60 102 70 96" stroke="#4A7C2A" stroke-width="1.2" fill="none" opacity="0.4"/>
+  <path d="M54 134 L58 138 L58 152 L54 152 Z" fill="#3A5F28" opacity="0.7"/>
+  <path d="M78 134 L82 138 L82 152 L78 152 Z" fill="#3A5F28" opacity="0.7"/>
+  <path d="M60 54 L58 58 Q60 60 62 58 Z" fill="#C99870" opacity="0.6"/>
+  <ellipse cx="47" cy="56" rx="3.4" ry="2.3" fill="#E8A088" opacity="0.34"/>
+  <ellipse cx="73" cy="56" rx="3.4" ry="2.3" fill="#E8A088" opacity="0.34"/>
+  <path d="M45 50 Q43 53 45 56" stroke="#C99870" stroke-width="1.3" fill="none" opacity="0.45"/>
+  <path d="M75 50 Q77 53 75 56" stroke="#B08560" stroke-width="1.3" fill="none" opacity="0.45"/>
+  <!-- modele du visage : lumiere haut-gauche, ombre bas-droite -->
+      <!-- arete du nez -->
+  <path d="M60 48 L59 55" stroke="#FFE0C2" stroke-width="1.6" opacity="0.6" stroke-linecap="round"/>
+  <path d="M61 48 L62 55" stroke="#8A6642" stroke-width="1.1" opacity="0.35" stroke-linecap="round"/>
+  <!-- narines -->
+  <ellipse cx="57.5" cy="57" rx="1.3" ry="0.9" fill="#8A6642" opacity="0.5"/>
+  <ellipse cx="62.5" cy="57" rx="1.3" ry="0.9" fill="#8A6642" opacity="0.5"/>
+  <!-- levres -->
+  <path d="M55 62 Q60 65 65 62" stroke="#8A6642" stroke-width="1.6" fill="none" opacity="0.62" stroke-linecap="round"/>
+    <!-- menton -->
+    <!-- paupieres -->
+      <!-- oreilles -->
+  <ellipse cx="43" cy="51" rx="3.2" ry="4.6" fill="#FFE0C2" stroke="#8A6642" stroke-width="0.9" opacity="0.85"/>
+  <ellipse cx="77" cy="51" rx="3.2" ry="4.6" fill="#C08B65" stroke="#8A6642" stroke-width="0.9" opacity="0.85"/>
+  <path d="M43 49 Q44 51 43 53" stroke="#8A6642" stroke-width="0.8" fill="none" opacity="0.4"/>
+</symbol>
+<symbol id="habitantJ" viewBox="0 0 120 160">
+  <!-- astronome au telescope, cape etoilee -->
+  <!-- ombre de contact -->
+  <ellipse cx="60" cy="151" rx="21" ry="4" fill="#3E2C12" opacity="0.28"/>
+  <ellipse cx="62" cy="153" rx="32" ry="6" fill="#5A431F" opacity="0.3"/>
+  <path d="M30 152 Q28 106 44 84 Q52 74 60 74 Q68 74 76 84 Q92 106 90 152 Z" fill="#2E3E6E" stroke="#12161E" stroke-width="1.6"/>
+  <path d="M30 152 Q28 106 44 84 Q52 74 60 74 L60 152 Z" fill="#42558A" stroke="#12161E" stroke-width="1.3"/>
+  <circle cx="44" cy="104" r="2.5" fill="#F0E4C0" stroke="#12161E" stroke-width="1.3"/>
+  <circle cx="76" cy="122" r="2" fill="#F0E4C0" stroke="#12161E" stroke-width="1.3"/>
+  <circle cx="52" cy="136" r="1.8" fill="#F0E4C0" stroke="#12161E" stroke-width="1.3"/>
+  <rect x="44" y="112" width="32" height="8" rx="3" fill="#C9A96E" stroke="#12161E" stroke-width="1.2"/>
+  <ellipse cx="60" cy="48" rx="16" ry="18" fill="#D9A878" stroke="#12161E" stroke-width="1.4"/>
+  <path d="M42 44 Q44 24 60 24 Q76 24 78 44 Q68 32 60 32 Q52 32 42 44 Z" fill="#DDE2E8" stroke="#12161E" stroke-width="1.3"/>
+  <circle cx="54" cy="48" r="2.4" fill="#2A1A12" stroke="#12161E" stroke-width="1.3"/>
+  <circle cx="53.4" cy="47.2" r="0.9" fill="#FFFFFF"/>
+  <circle cx="66" cy="48" r="2.4" fill="#2A1A12" stroke="#12161E" stroke-width="1.3"/>
+  <circle cx="65.4" cy="47.2" r="0.9" fill="#FFFFFF"/>
+  <rect x="84" y="86" width="6" height="34" rx="3" fill="#8592B0" stroke="#12161E" stroke-width="1" transform="rotate(-24 87 103)"/>
+  <path d="M44 134 L56 134 L56 152 L44 152 Z" fill="#1E2A46" stroke="#12161E" stroke-width="1.1"/>
+  <path d="M64 134 L76 134 L76 152 L64 152 Z" fill="#1E2A46" stroke="#12161E" stroke-width="1.1"/>
+  <path d="M60 74 Q30 76 30 108 L32 152 L60 152 Z" fill="#5E76B0" opacity="0.28"/>
+  <path d="M48 40 Q54 37 58 39" stroke="#C0CAD6" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M62 39 Q66 37 72 40" stroke="#C0CAD6" stroke-width="2" fill="none" stroke-linecap="round"/>
+    <!-- cote droit en perspective cavaliere -->
+  <path d="M80 84 L88 92 L86 152 L80 152 Z" fill="#1E2A46" stroke="#12161E" stroke-width="1.1"/>
+  <path d="M76 114 L84 118 L84 124 L76 122 Z" fill="#1E2A46" stroke="#12161E" stroke-width="0.9"/>
+  <ellipse cx="60" cy="80" rx="15" ry="4" fill="#2E3E6E" opacity="0.5"/>
+  <path d="M50 96 Q60 102 70 96" stroke="#2E3E6E" stroke-width="1.2" fill="none" opacity="0.4"/>
+  <path d="M54 134 L58 138 L58 152 L54 152 Z" fill="#1E2A46" opacity="0.7"/>
+  <path d="M78 134 L82 138 L82 152 L78 152 Z" fill="#1E2A46" opacity="0.7"/>
+  <path d="M60 52 L58 56 Q60 58 62 56 Z" fill="#C99870" opacity="0.6"/>
+  <ellipse cx="47" cy="54" rx="3.4" ry="2.3" fill="#E8A088" opacity="0.34"/>
+  <ellipse cx="73" cy="54" rx="3.4" ry="2.3" fill="#E8A088" opacity="0.34"/>
+  <path d="M45 48 Q43 51 45 54" stroke="#C99870" stroke-width="1.3" fill="none" opacity="0.45"/>
+  <path d="M75 48 Q77 51 75 54" stroke="#B08560" stroke-width="1.3" fill="none" opacity="0.45"/>
+  <!-- modele du visage : lumiere haut-gauche, ombre bas-droite -->
+      <!-- arete du nez -->
+  <path d="M60 46 L59 53" stroke="#F0C49A" stroke-width="1.6" opacity="0.6" stroke-linecap="round"/>
+  <path d="M61 46 L62 53" stroke="#7E5432" stroke-width="1.1" opacity="0.35" stroke-linecap="round"/>
+  <!-- narines -->
+  <ellipse cx="57.5" cy="55" rx="1.3" ry="0.9" fill="#7E5432" opacity="0.5"/>
+  <ellipse cx="62.5" cy="55" rx="1.3" ry="0.9" fill="#7E5432" opacity="0.5"/>
+  <!-- levres -->
+  <path d="M55 60 Q60 63 65 60" stroke="#7E5432" stroke-width="1.6" fill="none" opacity="0.62" stroke-linecap="round"/>
+    <!-- menton -->
+    <!-- paupieres -->
+      <!-- oreilles -->
+  <ellipse cx="43" cy="49" rx="3.2" ry="4.6" fill="#F0C49A" stroke="#7E5432" stroke-width="0.9" opacity="0.85"/>
+  <ellipse cx="77" cy="49" rx="3.2" ry="4.6" fill="#B07A50" stroke="#7E5432" stroke-width="0.9" opacity="0.85"/>
+  <path d="M43 47 Q44 49 43 51" stroke="#7E5432" stroke-width="0.8" fill="none" opacity="0.4"/>
+</symbol>
+<symbol id="habitantK" viewBox="0 0 120 160">
+  <!-- forgeronne, tablier de cuir et marteau -->
+  <!-- ombre de contact -->
+  <ellipse cx="60" cy="151" rx="21" ry="4" fill="#3E2C12" opacity="0.28"/>
+  <ellipse cx="62" cy="153" rx="30" ry="6" fill="#5A431F" opacity="0.3"/>
+  <path d="M38 152 L35 96 Q35 78 60 78 Q85 78 85 96 L82 152 Z" fill="#5C4326" stroke="#12161E" stroke-width="1.6"/>
+  <path d="M38 152 L35 96 Q35 78 60 78 L60 152 Z" fill="#7A5A38" stroke="#12161E" stroke-width="1.3"/>
+  <path d="M48 84 L48 130 L72 130 L72 84 Q60 90 48 84 Z" fill="#3E2C18" stroke="#12161E" stroke-width="1.2"/>
+  <rect x="44" y="118" width="32" height="7" rx="3" fill="#2A1D0E" stroke="#12161E" stroke-width="1.3"/>
+  <ellipse cx="60" cy="50" rx="16" ry="18" fill="#C08050" stroke="#12161E" stroke-width="1.4"/>
+  <path d="M44 46 Q46 26 60 26 Q74 26 76 46 Q68 34 60 34 Q52 34 44 46 Z" fill="#3A2418" stroke="#12161E" stroke-width="1.3"/>
+  <circle cx="54" cy="50" r="2.4" fill="#1A0E08" stroke="#12161E" stroke-width="1.3"/>
+  <circle cx="53.4" cy="49.2" r="0.9" fill="#FFFFFF"/>
+  <circle cx="66" cy="50" r="2.4" fill="#1A0E08" stroke="#12161E" stroke-width="1.3"/>
+  <circle cx="65.4" cy="49.2" r="0.9" fill="#FFFFFF"/>
+  <rect x="84" y="98" width="7" height="26" rx="2" fill="#7A5A38" stroke="#12161E" stroke-width="1"/>
+  <rect x="79" y="94" width="17" height="10" rx="2" fill="#8592B0" stroke="#12161E" stroke-width="1"/>
+  <path d="M42 132 L54 132 L54 152 L42 152 Z" fill="#2E1E0E" stroke="#12161E" stroke-width="1.1"/>
+  <path d="M66 132 L78 132 L78 152 L66 152 Z" fill="#2E1E0E" stroke="#12161E" stroke-width="1.1"/>
+  <path d="M60 78 Q35 78 35 96 L38 152 L60 152 Z" fill="#9A7852" opacity="0.3"/>
+  <path d="M49 44 Q54 41 58 43" stroke="#241408" stroke-width="1.7" fill="none" stroke-linecap="round"/>
+  <path d="M62 43 Q66 41 71 44" stroke="#241408" stroke-width="1.7" fill="none" stroke-linecap="round"/>
+  <ellipse cx="47" cy="56" rx="3.5" ry="2.5" fill="#C04828" opacity="0.4"/>
+  <!-- cote droit en perspective cavaliere -->
+  <path d="M80 84 L88 92 L86 152 L80 152 Z" fill="#2E1E0E" stroke="#12161E" stroke-width="1.1"/>
+  <path d="M76 114 L84 118 L84 124 L76 122 Z" fill="#2E1E0E" stroke="#12161E" stroke-width="0.9"/>
+  <ellipse cx="60" cy="80" rx="15" ry="4" fill="#5C4326" opacity="0.5"/>
+  <path d="M50 96 Q60 102 70 96" stroke="#5C4326" stroke-width="1.2" fill="none" opacity="0.4"/>
+  <path d="M54 134 L58 138 L58 152 L54 152 Z" fill="#2E1E0E" opacity="0.7"/>
+  <path d="M78 134 L82 138 L82 152 L78 152 Z" fill="#2E1E0E" opacity="0.7"/>
+  <path d="M60 54 L58 58 Q60 60 62 58 Z" fill="#C99870" opacity="0.6"/>
+  <ellipse cx="47" cy="56" rx="3.4" ry="2.3" fill="#E8A088" opacity="0.34"/>
+  <ellipse cx="73" cy="56" rx="3.4" ry="2.3" fill="#E8A088" opacity="0.34"/>
+  <path d="M45 50 Q43 53 45 56" stroke="#C99870" stroke-width="1.3" fill="none" opacity="0.45"/>
+  <path d="M75 50 Q77 53 75 56" stroke="#B08560" stroke-width="1.3" fill="none" opacity="0.45"/>
+  <!-- modele du visage : lumiere haut-gauche, ombre bas-droite -->
+      <!-- arete du nez -->
+  <path d="M60 48 L59 55" stroke="#E8B888" stroke-width="1.6" opacity="0.6" stroke-linecap="round"/>
+  <path d="M61 48 L62 55" stroke="#6A3E22" stroke-width="1.1" opacity="0.35" stroke-linecap="round"/>
+  <!-- narines -->
+  <ellipse cx="57.5" cy="57" rx="1.3" ry="0.9" fill="#6A3E22" opacity="0.5"/>
+  <ellipse cx="62.5" cy="57" rx="1.3" ry="0.9" fill="#6A3E22" opacity="0.5"/>
+  <!-- levres -->
+  <path d="M55 62 Q60 65 65 62" stroke="#6A3E22" stroke-width="1.6" fill="none" opacity="0.62" stroke-linecap="round"/>
+    <!-- menton -->
+    <!-- paupieres -->
+      <!-- oreilles -->
+  <ellipse cx="43" cy="51" rx="3.2" ry="4.6" fill="#E8B888" stroke="#6A3E22" stroke-width="0.9" opacity="0.85"/>
+  <ellipse cx="77" cy="51" rx="3.2" ry="4.6" fill="#9E6440" stroke="#6A3E22" stroke-width="0.9" opacity="0.85"/>
+  <path d="M43 49 Q44 51 43 53" stroke="#6A3E22" stroke-width="0.8" fill="none" opacity="0.4"/>
+</symbol>
+<symbol id="habitantL" viewBox="0 0 120 160">
+  <!-- messagere ailee, tunique legere -->
+  <!-- ombre de contact -->
+  <ellipse cx="60" cy="151" rx="21" ry="4" fill="#3E2C12" opacity="0.28"/>
+  <ellipse cx="62" cy="153" rx="30" ry="6" fill="#5A431F" opacity="0.3"/>
+  <path d="M34 148 Q40 96 60 78 Q80 96 86 148 Q86 152 80 152 L40 152 Q34 152 34 148 Z" fill="#C86A8A" stroke="#12161E" stroke-width="1.6"/>
+  <path d="M34 148 Q40 96 60 78 L60 152 L40 152 Q34 152 34 148 Z" fill="#E28AA6" stroke="#12161E" stroke-width="1.3"/>
+  <path d="M84 88 Q100 78 104 62 Q94 72 84 82 Z" fill="#F4E0E8" opacity="0.85" stroke="#12161E" stroke-width="1"/>
+  <path d="M36 88 Q20 78 16 62 Q26 72 36 82 Z" fill="#F4E0E8" opacity="0.7" stroke="#12161E" stroke-width="1"/>
+  <rect x="44" y="112" width="32" height="7" rx="3" fill="#C9A96E" stroke="#12161E" stroke-width="1.1"/>
+  <ellipse cx="60" cy="48" rx="16" ry="18" fill="#F0C49A" stroke="#12161E" stroke-width="1.4"/>
+  <path d="M43 46 Q46 24 60 24 Q74 24 77 46 Q80 34 60 32 Q40 34 43 46 Z" fill="#C4A24E" stroke="#12161E" stroke-width="1.3"/>
+  <circle cx="54" cy="48" r="2.4" fill="#2A1A12" stroke="#12161E" stroke-width="1.3"/>
+  <circle cx="53.4" cy="47.2" r="0.9" fill="#FFFFFF"/>
+  <circle cx="66" cy="48" r="2.4" fill="#2A1A12" stroke="#12161E" stroke-width="1.3"/>
+  <circle cx="65.4" cy="47.2" r="0.9" fill="#FFFFFF"/>
+  <path d="M44 134 L56 134 L56 152 L44 152 Z" fill="#8A3A54" stroke="#12161E" stroke-width="1.1"/>
+  <path d="M64 134 L76 134 L76 152 L64 152 Z" fill="#8A3A54" stroke="#12161E" stroke-width="1.1"/>
+  <path d="M60 78 Q34 96 34 148 L40 152 L60 152 Z" fill="#F0A0BC" opacity="0.3"/>
+  <path d="M48 40 Q54 37 58 39" stroke="#A8862E" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+  <path d="M62 39 Q66 37 72 40" stroke="#A8862E" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+  <ellipse cx="47" cy="54" rx="3.5" ry="2.5" fill="#E88098" opacity="0.45"/>
+  <ellipse cx="73" cy="54" rx="3.5" ry="2.5" fill="#E88098" opacity="0.45"/>
+  <!-- cote droit en perspective cavaliere -->
+  <path d="M80 84 L88 92 L86 152 L80 152 Z" fill="#8A3A54" stroke="#12161E" stroke-width="1.1"/>
+  <path d="M76 114 L84 118 L84 124 L76 122 Z" fill="#8A3A54" stroke="#12161E" stroke-width="0.9"/>
+  <ellipse cx="60" cy="80" rx="15" ry="4" fill="#C86A8A" opacity="0.5"/>
+  <path d="M50 96 Q60 102 70 96" stroke="#C86A8A" stroke-width="1.2" fill="none" opacity="0.4"/>
+  <path d="M54 134 L58 138 L58 152 L54 152 Z" fill="#8A3A54" opacity="0.7"/>
+  <path d="M78 134 L82 138 L82 152 L78 152 Z" fill="#8A3A54" opacity="0.7"/>
+  <path d="M60 52 L58 56 Q60 58 62 56 Z" fill="#C99870" opacity="0.6"/>
+  <ellipse cx="47" cy="54" rx="3.4" ry="2.3" fill="#E8A088" opacity="0.34"/>
+  <ellipse cx="73" cy="54" rx="3.4" ry="2.3" fill="#E8A088" opacity="0.34"/>
+  <path d="M45 48 Q43 51 45 54" stroke="#C99870" stroke-width="1.3" fill="none" opacity="0.45"/>
+  <path d="M75 48 Q77 51 75 54" stroke="#B08560" stroke-width="1.3" fill="none" opacity="0.45"/>
+  <!-- modele du visage : lumiere haut-gauche, ombre bas-droite -->
+      <!-- arete du nez -->
+  <path d="M60 46 L59 53" stroke="#FFE4CC" stroke-width="1.6" opacity="0.6" stroke-linecap="round"/>
+  <path d="M61 46 L62 53" stroke="#96684A" stroke-width="1.1" opacity="0.35" stroke-linecap="round"/>
+  <!-- narines -->
+  <ellipse cx="57.5" cy="55" rx="1.3" ry="0.9" fill="#96684A" opacity="0.5"/>
+  <ellipse cx="62.5" cy="55" rx="1.3" ry="0.9" fill="#96684A" opacity="0.5"/>
+  <!-- levres -->
+  <path d="M55 60 Q60 63 65 60" stroke="#96684A" stroke-width="1.6" fill="none" opacity="0.62" stroke-linecap="round"/>
+    <!-- menton -->
+    <!-- paupieres -->
+      <!-- oreilles -->
+  <ellipse cx="43" cy="49" rx="3.2" ry="4.6" fill="#FFE4CC" stroke="#96684A" stroke-width="0.9" opacity="0.85"/>
+  <ellipse cx="77" cy="49" rx="3.2" ry="4.6" fill="#D09870" stroke="#96684A" stroke-width="0.9" opacity="0.85"/>
+  <path d="M43 47 Q44 49 43 51" stroke="#96684A" stroke-width="0.8" fill="none" opacity="0.4"/>
+</symbol>
+<symbol id="habitantM" viewBox="0 0 120 160">
+  <!-- vieux marin, pull raye et pipe -->
+  <!-- ombre de contact -->
+  <ellipse cx="60" cy="151" rx="21" ry="4" fill="#3E2C12" opacity="0.28"/>
+  <ellipse cx="62" cy="153" rx="30" ry="6" fill="#5A431F" opacity="0.3"/>
+  <path d="M38 152 L35 96 Q35 78 60 78 Q85 78 85 96 L82 152 Z" fill="#2E4A72" stroke="#12161E" stroke-width="1.6"/>
+  <rect x="36" y="92" width="48" height="6" fill="#E8ECF0" opacity="0.8"/>
+  <rect x="36" y="106" width="48" height="6" fill="#E8ECF0" opacity="0.8"/>
+  <rect x="36" y="120" width="48" height="6" fill="#E8ECF0" opacity="0.8"/>
+  <path d="M38 152 L35 96 Q35 78 60 78 L60 152 Z" fill="#FFFFFF" opacity="0.12"/>
+  <ellipse cx="60" cy="50" rx="16" ry="18" fill="#DFA878" stroke="#12161E" stroke-width="1.4"/>
+  <path d="M42 42 Q44 22 60 22 Q76 22 78 42 L78 46 L42 46 Z" fill="#1E2E4A" stroke="#12161E" stroke-width="1.2"/>
+  <path d="M46 58 Q50 76 60 80 Q70 76 74 58 Q68 64 60 64 Q52 64 46 58 Z" fill="#E8ECF0" stroke="#12161E" stroke-width="1.3"/>
+  <circle cx="54" cy="50" r="2.4" fill="#2A1A12" stroke="#12161E" stroke-width="1.3"/>
+  <circle cx="53.4" cy="49.2" r="0.9" fill="#FFFFFF"/>
+  <circle cx="66" cy="50" r="2.4" fill="#2A1A12" stroke="#12161E" stroke-width="1.3"/>
+  <circle cx="65.4" cy="49.2" r="0.9" fill="#FFFFFF"/>
+  <path d="M42 132 L54 132 L54 152 L42 152 Z" fill="#1A2E48" stroke="#12161E" stroke-width="1.1"/>
+  <path d="M66 132 L78 132 L78 152 L66 152 Z" fill="#1A2E48" stroke="#12161E" stroke-width="1.1"/>
+  <rect x="44" y="118" width="32" height="9" rx="3" fill="#5C4326" stroke="#12161E" stroke-width="1.2"/>
+  <path d="M49 44 Q54 41 58 43" stroke="#C0C8D0" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+  <path d="M62 43 Q66 41 71 44" stroke="#C0C8D0" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+  <ellipse cx="47" cy="56" rx="3.5" ry="2.5" fill="#C06848" opacity="0.4"/>
+  <!-- cote droit en perspective cavaliere -->
+  <path d="M80 84 L88 92 L86 152 L80 152 Z" fill="#1A2E48" stroke="#12161E" stroke-width="1.1"/>
+  <path d="M76 114 L84 118 L84 124 L76 122 Z" fill="#1A2E48" stroke="#12161E" stroke-width="0.9"/>
+  <ellipse cx="60" cy="80" rx="15" ry="4" fill="#2E4A72" opacity="0.5"/>
+  <path d="M50 96 Q60 102 70 96" stroke="#2E4A72" stroke-width="1.2" fill="none" opacity="0.4"/>
+  <path d="M54 134 L58 138 L58 152 L54 152 Z" fill="#1A2E48" opacity="0.7"/>
+  <path d="M78 134 L82 138 L82 152 L78 152 Z" fill="#1A2E48" opacity="0.7"/>
+  <path d="M60 54 L58 58 Q60 60 62 58 Z" fill="#C99870" opacity="0.6"/>
+  <ellipse cx="47" cy="56" rx="3.4" ry="2.3" fill="#E8A088" opacity="0.34"/>
+  <ellipse cx="73" cy="56" rx="3.4" ry="2.3" fill="#E8A088" opacity="0.34"/>
+  <path d="M45 50 Q43 53 45 56" stroke="#C99870" stroke-width="1.3" fill="none" opacity="0.45"/>
+  <path d="M75 50 Q77 53 75 56" stroke="#B08560" stroke-width="1.3" fill="none" opacity="0.45"/>
+  <!-- modele du visage : lumiere haut-gauche, ombre bas-droite -->
+      <!-- arete du nez -->
+  <path d="M60 48 L59 55" stroke="#F4CCA0" stroke-width="1.6" opacity="0.6" stroke-linecap="round"/>
+  <path d="M61 48 L62 55" stroke="#7E5432" stroke-width="1.1" opacity="0.35" stroke-linecap="round"/>
+  <!-- narines -->
+  <ellipse cx="57.5" cy="57" rx="1.3" ry="0.9" fill="#7E5432" opacity="0.5"/>
+  <ellipse cx="62.5" cy="57" rx="1.3" ry="0.9" fill="#7E5432" opacity="0.5"/>
+  <!-- levres -->
+  <path d="M55 62 Q60 65 65 62" stroke="#7E5432" stroke-width="1.6" fill="none" opacity="0.62" stroke-linecap="round"/>
+    <!-- menton -->
+    <!-- paupieres -->
+      <!-- oreilles -->
+  <ellipse cx="43" cy="51" rx="3.2" ry="4.6" fill="#F4CCA0" stroke="#7E5432" stroke-width="0.9" opacity="0.85"/>
+  <ellipse cx="77" cy="51" rx="3.2" ry="4.6" fill="#B4805A" stroke="#7E5432" stroke-width="0.9" opacity="0.85"/>
+  <path d="M43 49 Q44 51 43 53" stroke="#7E5432" stroke-width="0.8" fill="none" opacity="0.4"/>
+</symbol>
+<symbol id="habitantN" viewBox="0 0 120 160">
+  <!-- enfant curieux, sac a dos -->
+  <!-- ombre de contact -->
+  <ellipse cx="60" cy="151" rx="21" ry="4" fill="#3E2C12" opacity="0.28"/>
+  <ellipse cx="62" cy="153" rx="26" ry="5" fill="#5A431F" opacity="0.3"/>
+  <path d="M42 152 L40 108 Q40 92 60 92 Q80 92 80 108 L78 152 Z" fill="#E0913A" stroke="#12161E" stroke-width="1.6"/>
+  <path d="M42 152 L40 108 Q40 92 60 92 L60 152 Z" fill="#F0A854" stroke="#12161E" stroke-width="1.3"/>
+  <path d="M78 100 Q90 104 90 118 Q90 130 80 132 L78 110 Z" fill="#4A6E9E" stroke="#12161E" stroke-width="1.2"/>
+  <ellipse cx="60" cy="70" rx="18" ry="20" fill="#F0C49A" stroke="#12161E" stroke-width="1.4"/>
+  <path d="M42 66 Q44 44 60 44 Q76 44 78 66 Q68 54 60 54 Q52 54 42 66 Z" fill="#8A5A2A" stroke="#12161E" stroke-width="1.3"/>
+  <circle cx="53" cy="70" r="2.4" fill="#2A1A12" stroke="#12161E" stroke-width="1.3"/>
+  <circle cx="67" cy="70" r="2.4" fill="#2A1A12" stroke="#12161E" stroke-width="1.3"/>
+  <path d="M54 80 Q60 84 66 80" stroke="#C08B65" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+  <path d="M46 138 L57 138 L57 152 L46 152 Z" fill="#8A5A20" stroke="#12161E" stroke-width="1.1"/>
+  <path d="M63 138 L74 138 L74 152 L63 152 Z" fill="#8A5A20" stroke="#12161E" stroke-width="1.1"/>
+  <path d="M60 92 Q40 92 40 110 L42 152 L60 152 Z" fill="#FFC078" opacity="0.32"/>
+  <rect x="44" y="118" width="32" height="8" rx="3" fill="#A85828" stroke="#12161E" stroke-width="1.1"/>
+  <path d="M48 62 Q54 59 58 61" stroke="#5A3A18" stroke-width="1.7" fill="none" stroke-linecap="round"/>
+  <path d="M62 61 Q66 59 72 62" stroke="#5A3A18" stroke-width="1.7" fill="none" stroke-linecap="round"/>
+  <ellipse cx="46" cy="76" rx="4" ry="3" fill="#E89878" opacity="0.45"/>
+  <ellipse cx="74" cy="76" rx="4" ry="3" fill="#E89878" opacity="0.45"/>
+  <!-- cote droit en perspective cavaliere -->
+  <path d="M80 84 L88 92 L86 152 L80 152 Z" fill="#8A5A20" stroke="#12161E" stroke-width="1.1"/>
+  <path d="M76 114 L84 118 L84 124 L76 122 Z" fill="#8A5A20" stroke="#12161E" stroke-width="0.9"/>
+  <ellipse cx="60" cy="80" rx="15" ry="4" fill="#D0821E" opacity="0.5"/>
+  <path d="M50 96 Q60 102 70 96" stroke="#D0821E" stroke-width="1.2" fill="none" opacity="0.4"/>
+  <path d="M54 134 L58 138 L58 152 L54 152 Z" fill="#8A5A20" opacity="0.7"/>
+  <path d="M78 134 L82 138 L82 152 L78 152 Z" fill="#8A5A20" opacity="0.7"/>
+  <!-- modele du visage : lumiere haut-gauche, ombre bas-droite -->
+      <!-- arete du nez -->
+  <path d="M60 68 L59 75" stroke="#FFE4CC" stroke-width="1.6" opacity="0.6" stroke-linecap="round"/>
+  <path d="M61 68 L62 75" stroke="#8A6642" stroke-width="1.1" opacity="0.35" stroke-linecap="round"/>
+  <!-- narines -->
+  <ellipse cx="57.5" cy="77" rx="1.3" ry="0.9" fill="#8A6642" opacity="0.5"/>
+  <ellipse cx="62.5" cy="77" rx="1.3" ry="0.9" fill="#8A6642" opacity="0.5"/>
+  <!-- levres -->
+  <path d="M55 82 Q60 85 65 82" stroke="#8A6642" stroke-width="1.6" fill="none" opacity="0.62" stroke-linecap="round"/>
+    <!-- menton -->
+  <path d="M56 86 Q60 88 64 86" stroke="#C99870" stroke-width="1.2" fill="none" opacity="0.32"/>
+  <!-- paupieres -->
+      <!-- oreilles -->
+  <ellipse cx="43" cy="71" rx="3.2" ry="4.6" fill="#FFE4CC" stroke="#8A6642" stroke-width="0.9" opacity="0.85"/>
+  <ellipse cx="77" cy="71" rx="3.2" ry="4.6" fill="#C99870" stroke="#8A6642" stroke-width="0.9" opacity="0.85"/>
+  <path d="M43 69 Q44 71 43 73" stroke="#8A6642" stroke-width="0.8" fill="none" opacity="0.4"/>
+</symbol>
+<symbol id="habitantO" viewBox="0 0 120 160">
+  <!-- guerisseuse, chale et fioles a la ceinture -->
+  <!-- ombre de contact -->
+  <ellipse cx="60" cy="151" rx="21" ry="4" fill="#3E2C12" opacity="0.28"/>
+  <ellipse cx="62" cy="153" rx="32" ry="6" fill="#5A431F" opacity="0.3"/>
+  <path d="M32 152 Q32 106 46 84 Q54 74 60 74 Q66 74 74 84 Q88 106 88 152 Z" fill="#3E7A6E" stroke="#12161E" stroke-width="1.6"/>
+  <path d="M32 152 Q32 106 46 84 Q54 74 60 74 L60 152 Z" fill="#4E9488" stroke="#12161E" stroke-width="1.3"/>
+  <path d="M40 86 Q60 96 80 86 L78 104 Q60 112 42 104 Z" fill="#2C5A50" stroke="#12161E" stroke-width="1.2"/>
+  <rect x="44" y="114" width="32" height="7" rx="3" fill="#8A6A3A" stroke="#12161E" stroke-width="1.1"/>
+  <rect x="48" y="120" width="6" height="11" rx="2" fill="#C8DCEC" stroke="#12161E" stroke-width="0.9"/>
+  <rect x="58" y="120" width="6" height="9" rx="2" fill="#E8A0B0" stroke="#12161E" stroke-width="0.9"/>
+  <ellipse cx="60" cy="48" rx="16" ry="18" fill="#E8B892" stroke="#12161E" stroke-width="1.4"/>
+  <path d="M42 46 Q44 24 60 24 Q76 24 78 46 Q76 30 60 30 Q44 30 42 46 Z" fill="#8A96A4" stroke="#12161E" stroke-width="1.3"/>
+  <circle cx="54" cy="48" r="2.4" fill="#2A1A12" stroke="#12161E" stroke-width="1.3"/>
+  <circle cx="53.4" cy="47.2" r="0.9" fill="#FFFFFF"/>
+  <circle cx="66" cy="48" r="2.4" fill="#2A1A12" stroke="#12161E" stroke-width="1.3"/>
+  <circle cx="65.4" cy="47.2" r="0.9" fill="#FFFFFF"/>
+  <path d="M44 134 L56 134 L56 152 L44 152 Z" fill="#1E4A42" stroke="#12161E" stroke-width="1.1"/>
+  <path d="M64 134 L76 134 L76 152 L64 152 Z" fill="#1E4A42" stroke="#12161E" stroke-width="1.1"/>
+  <path d="M60 74 Q32 84 32 152 L38 152 L60 152 Z" fill="#7EC0B0" opacity="0.28"/>
+  <path d="M48 40 Q54 37 58 39" stroke="#6E7A88" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+  <path d="M62 39 Q66 37 72 40" stroke="#6E7A88" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+    <!-- cote droit en perspective cavaliere -->
+  <path d="M80 84 L88 92 L86 152 L80 152 Z" fill="#1E4A42" stroke="#12161E" stroke-width="1.1"/>
+  <path d="M76 114 L84 118 L84 124 L76 122 Z" fill="#1E4A42" stroke="#12161E" stroke-width="0.9"/>
+  <ellipse cx="60" cy="80" rx="15" ry="4" fill="#2C5A50" opacity="0.5"/>
+  <path d="M50 96 Q60 102 70 96" stroke="#2C5A50" stroke-width="1.2" fill="none" opacity="0.4"/>
+  <path d="M54 134 L58 138 L58 152 L54 152 Z" fill="#1E4A42" opacity="0.7"/>
+  <path d="M78 134 L82 138 L82 152 L78 152 Z" fill="#1E4A42" opacity="0.7"/>
+  <path d="M60 52 L58 56 Q60 58 62 56 Z" fill="#C99870" opacity="0.6"/>
+  <ellipse cx="47" cy="54" rx="3.4" ry="2.3" fill="#E8A088" opacity="0.34"/>
+  <ellipse cx="73" cy="54" rx="3.4" ry="2.3" fill="#E8A088" opacity="0.34"/>
+  <path d="M45 48 Q43 51 45 54" stroke="#C99870" stroke-width="1.3" fill="none" opacity="0.45"/>
+  <path d="M75 48 Q77 51 75 54" stroke="#B08560" stroke-width="1.3" fill="none" opacity="0.45"/>
+  <!-- modele du visage : lumiere haut-gauche, ombre bas-droite -->
+      <!-- arete du nez -->
+  <path d="M60 46 L59 53" stroke="#FFE0C2" stroke-width="1.6" opacity="0.6" stroke-linecap="round"/>
+  <path d="M61 46 L62 53" stroke="#8A6642" stroke-width="1.1" opacity="0.35" stroke-linecap="round"/>
+  <!-- narines -->
+  <ellipse cx="57.5" cy="55" rx="1.3" ry="0.9" fill="#8A6642" opacity="0.5"/>
+  <ellipse cx="62.5" cy="55" rx="1.3" ry="0.9" fill="#8A6642" opacity="0.5"/>
+  <!-- levres -->
+  <path d="M55 60 Q60 63 65 60" stroke="#8A6642" stroke-width="1.6" fill="none" opacity="0.62" stroke-linecap="round"/>
+    <!-- menton -->
+    <!-- paupieres -->
+      <!-- oreilles -->
+  <ellipse cx="43" cy="49" rx="3.2" ry="4.6" fill="#FFE0C2" stroke="#8A6642" stroke-width="0.9" opacity="0.85"/>
+  <ellipse cx="77" cy="49" rx="3.2" ry="4.6" fill="#C08B65" stroke="#8A6642" stroke-width="0.9" opacity="0.85"/>
+  <path d="M43 47 Q44 49 43 51" stroke="#8A6642" stroke-width="0.8" fill="none" opacity="0.4"/>
+</symbol>
+</defs>
+</svg>
+
+
+<a href="#main" class="skip-link">Aller directement au contenu</a>
+
+<div class="page">
+  <a href="https://rbrdingenierie-ui.github.io/accueil_outils/" class="back-to-hub"><span aria-hidden="true">←</span> Retour au village</a>
+
+  <div class="a11y-bar-espace" id="a11yBarEspace" aria-hidden="true"></div>
+  <div class="a11y-bar" id="a11yBar" role="region" aria-label="Options d'accessibilité">
+    <span class="a11y-bar-label">♿ Accessibilité</span>
+    <button type="button" id="a11yFontBtn" class="a11y-toggle-btn" aria-pressed="false">🔤 Police adaptée</button>
+    <button type="button" id="a11yContrastBtn" class="a11y-toggle-btn" aria-pressed="false">◐ Contraste renforcé</button>
+    <button type="button" id="falcModeBtn" class="a11y-toggle-btn" aria-pressed="false" title="Facile à Lire et à Comprendre : simplifie le texte de la page">📖 Mode FALC</button>
+    <button type="button" id="hoverReadBtn" class="a11y-toggle-btn" aria-pressed="false" title="Lit à voix haute le contenu de la page quand la souris passe dessus">🔊 Lecture au survol</button>
+    <div class="a11y-size-group" role="group" aria-label="Taille du texte">
+      <span>Taille du texte</span>
+      <button type="button" id="a11ySizeDown" class="a11y-size-btn" aria-label="Réduire la taille du texte">A−</button>
+      <button type="button" id="a11ySizeReset" class="a11y-size-btn" aria-label="Taille du texte par défaut">A</button>
+      <button type="button" id="a11ySizeUp" class="a11y-size-btn" aria-label="Agrandir la taille du texte">A+</button>
+    </div>
+  </div>
+
+  <main id="main" tabindex="-1">
+  <header>
+    <h1><span aria-hidden="true">🃏</span> Mes flashcards</h1>
+    <div class="falc-normal-content"><p>Fabriquez vos cartes de révision, rangez-les par matière et chapitre, puis testez-vous.</p></div>
+    <div class="falc-simple-content"><p>Créez vos cartes de révision.<br>Rangez-les par matière et chapitre.<br>Puis testez-vous.</p></div>
+  </header>
+
+  <div class="tabs" role="tablist" aria-label="Sections de l'outil">
+    <button class="tab-btn active" data-tab="pourquoi" role="tab" aria-selected="true" aria-controls="panel-pourquoi" id="tabbtn-pourquoi">💡 À quoi ça sert</button>
+    <button class="tab-btn" data-tab="comment" role="tab" aria-selected="false" aria-controls="panel-comment" id="tabbtn-comment">⚙️ Comment ça fonctionne</button>
+    <button class="tab-btn" data-tab="creer" role="tab" aria-selected="false" aria-controls="panel-creer" id="tabbtn-creer">✏️ Créer mes cartes</button>
+    <button class="tab-btn" data-tab="reviser" role="tab" aria-selected="false" aria-controls="panel-reviser" id="tabbtn-reviser">🎯 Me tester</button>
+    <button class="tab-btn" data-tab="importer" role="tab" aria-selected="false" aria-controls="panel-importer" id="tabbtn-importer">📥 Importer</button>
+  </div>
+
+  <!-- ============ ONGLET : A QUOI CA SERT ============ -->
+  <div class="tab-panel active" id="panel-pourquoi" role="tabpanel" aria-labelledby="tabbtn-pourquoi" tabindex="0">
+    <div class="panel">
+      <div class="panel-title">💡 Qu'est-ce qu'une flashcard ?</div>
+      <div class="falc-normal-content">
+        <p class="lede">Une flashcard (carte mémoire) est une méthode d'apprentissage active qui présente, au recto, une notion précise et sa place dans le programme, et au verso, l'ensemble des éléments à connaître pour la comprendre.</p>
+      </div>
+      <div class="falc-simple-content">
+        <p>Une flashcard est une carte pour apprendre.<br>Devant : la question.<br>Derrière : la réponse.<br>On cherche la réponse de mémoire.<br>Puis on retourne la carte pour vérifier.</p>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">🧠 Pourquoi ça marche</div>
+      <div class="falc-normal-content">
+        <p class="lede">Son efficacité repose sur plusieurs principes neuroscientifiques complémentaires.</p>
+        <ol class="principe-list">
+          <li><strong>Répétition espacée</strong> — chaque révision réactive les connexions neuronales associées à la notion.</li>
+          <li><strong>Structuration</strong> — découper une information complexe en unités courtes réduit la charge cognitive et facilite la mémorisation.</li>
+          <li><strong>Ancrages mémoriels multiples</strong> — une flashcard mobilise plusieurs mémoires à la fois : visuelle (la carte), sémantique (la définition), kinesthésique (le fait de manipuler la carte).</li>
+          <li><strong>Effet de test</strong> — chercher la réponse de mémoire avant de la vérifier engage activement le cerveau, contrairement à une relecture passive.</li>
+          <li><strong>Apprentissage par l'erreur</strong> — le feedback immédiat (recto/verso) permet de corriger rapidement une erreur, ce qui renforce la plasticité neuronale.</li>
+          <li><strong>Apprentissage personnalisé</strong> — en triant ses cartes selon ses difficultés, on concentre l'effort de révision là où il est le plus utile.</li>
+        </ol>
+      </div>
+      <div class="falc-simple-content">
+        <p>La flashcard aide à apprendre pour 6 raisons :</p>
+        <p>1. On revoit la carte plusieurs fois.<br>Le cerveau retient mieux.</p>
+        <p>2. Chaque carte est courte.<br>C'est plus facile à retenir.</p>
+        <p>3. On utilise plusieurs mémoires :<br>la vue, le sens des mots, le geste.</p>
+        <p>4. On cherche la réponse dans sa tête.<br>C'est mieux que de relire.</p>
+        <p>5. On voit tout de suite si on s'est trompé.<br>On corrige vite.</p>
+        <p>6. On revoit surtout les cartes difficiles.</p>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">✅ Une bonne flashcard</div>
+      <div class="falc-normal-content">
+        <p class="lede">Une flashcard efficace doit être simple, claire et optimisée pour favoriser la mémorisation.</p>
+      </div>
+      <div class="falc-simple-content">
+        <p>Une bonne carte est simple et claire.<br>Voici 4 conseils.</p>
+      </div>
+      <div class="conseil-grid">
+        <div class="conseil-card conseil-1">
+          <div class="conseil-icon" aria-hidden="true">💡</div>
+          <div class="conseil-title">Une idée par carte</div>
+          <div class="conseil-text falc-normal-content">Chaque flashcard doit se concentrer sur un seul concept. La simplicité permet de retenir l'essentiel sans surcharger l'apprenant. Limitez-vous à une notion clé, en ajoutant des illustrations ou des exemples.</div>
+          <div class="conseil-text falc-simple-content">Une seule idée par carte.<br>C'est plus facile à retenir.</div>
+        </div>
+        <div class="conseil-card conseil-2">
+          <div class="conseil-icon" aria-hidden="true">🎯</div>
+          <div class="conseil-title">Formulation concise</div>
+          <div class="conseil-text falc-normal-content">Le texte doit être court et direct, sans ambiguïté. Les explications doivent être précises, évitant les formulations complexes. Une formulation claire renforce l'effort de récupération, essentiel pour mémoriser.</div>
+          <div class="conseil-text falc-simple-content">Écrivez des phrases courtes.<br>Utilisez des mots simples.</div>
+        </div>
+        <div class="conseil-card conseil-3">
+          <div class="conseil-icon" aria-hidden="true">🎨</div>
+          <div class="conseil-title">Pictogrammes et couleurs</div>
+          <div class="conseil-text falc-normal-content">Utilisez pictogrammes et couleurs pour renforcer l'ancrage mémoriel. Les images stimulent la mémoire visuelle, et les couleurs permettent de hiérarchiser l'information et de rendre les cartes plus attrayantes et mémorables.</div>
+          <div class="conseil-text falc-simple-content">Ajoutez des images.<br>Utilisez des couleurs.<br>Cela aide la mémoire.</div>
+        </div>
+        <div class="conseil-card conseil-4">
+          <div class="conseil-icon" aria-hidden="true">🔍</div>
+          <div class="conseil-title">Indices mnémotechniques</div>
+          <div class="conseil-text falc-normal-content">Les acronymes et autres moyens mnémotechniques sont d'excellents outils pour faciliter la mémorisation des concepts complexes. Cela permet de rendre les informations plus facilement accessibles et mieux structurées dans la mémoire.</div>
+          <div class="conseil-text falc-simple-content">Inventez des astuces pour retenir.<br>Par exemple un mot avec les premières lettres.</div>
+        </div>
+      </div>
+      <div class="btn-row" style="justify-content:center; margin-top:20px;">
+        <button type="button" class="btn-primary" data-goto="creer">Créer mes cartes →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ ONGLET : COMMENT CA FONCTIONNE ============ -->
+  <div class="tab-panel" id="panel-comment" role="tabpanel" aria-labelledby="tabbtn-comment" tabindex="0">
+    <div class="panel">
+      <div class="panel-title">⚙️ Comment utiliser cet outil</div>
+      <div class="falc-normal-content">
+        <p class="lede">Quelques repères pour créer vos cartes et vous tester efficacement.</p>
+      </div>
+      <div class="falc-simple-content">
+        <p>Voici comment utiliser l'outil.<br>Suivez ces 5 étapes.</p>
+      </div>
+
+      <div class="how-step">
+        <span class="how-num" aria-hidden="true">1</span>
+        <div class="how-body">
+          <div class="how-title">Nommez votre paquet</div>
+          <div class="falc-normal-content"><p>Indiquez une matière et un chapitre : vos cartes seront rangées automatiquement sous ce paquet. Changez ces champs pour commencer un nouveau paquet, ou pour revenir à un paquet existant.</p></div>
+          <div class="falc-simple-content"><p>Écrivez la matière et le chapitre.<br>Vos cartes seront rangées ensemble.</p></div>
+        </div>
+      </div>
+
+      <div class="how-step">
+        <span class="how-num" aria-hidden="true">2</span>
+        <div class="how-body">
+          <div class="how-title">Choisissez l'apparence</div>
+          <div class="falc-normal-content"><p>Sélectionnez une police et une couleur de texte. Verdana est recommandée pour sa lisibilité. Vous pouvez ajouter vos propres couleurs : elles sont mémorisées pour vos prochaines visites.</p></div>
+          <div class="falc-simple-content"><p>Choisissez la police et la couleur.<br>Verdana est plus facile à lire.</p></div>
+        </div>
+      </div>
+
+      <div class="how-step">
+        <span class="how-num" aria-hidden="true">3</span>
+        <div class="how-body">
+          <div class="how-title">Ajoutez vos cartes</div>
+          <div class="falc-normal-content"><p>Écrivez la question au recto, la réponse au verso. Vous pouvez ajouter une image, soit par son adresse web, soit depuis votre appareil. L'image apparaîtra au recto, avec la question.</p></div>
+          <div class="falc-simple-content"><p>Écrivez la question.<br>Écrivez la réponse.<br>Vous pouvez ajouter une image.</p></div>
+        </div>
+      </div>
+
+      <div class="how-step">
+        <span class="how-num" aria-hidden="true">4</span>
+        <div class="how-body">
+          <div class="how-title">Testez-vous</div>
+          <div class="falc-normal-content"><p>Dans l'onglet « Me tester », choisissez un paquet. Cherchez la réponse de mémoire avant de retourner la carte : c'est cet effort qui fait travailler le cerveau. Mélangez les cartes pour éviter d'apprendre l'ordre plutôt que le contenu.</p></div>
+          <div class="falc-simple-content"><p>Allez dans « Me tester ».<br>Cherchez la réponse dans votre tête.<br>Puis retournez la carte.</p></div>
+        </div>
+      </div>
+
+      <div class="how-step">
+        <span class="how-num" aria-hidden="true">5</span>
+        <div class="how-body">
+          <div class="how-title">Importez ou exportez</div>
+          <div class="falc-normal-content"><p>Pour créer beaucoup de cartes d'un coup, préparez-les dans un tableur et importez le fichier. Un modèle est téléchargeable dans l'onglet « Importer ». Vous pouvez aussi exporter un paquet pour le sauvegarder ou le partager.</p></div>
+          <div class="falc-simple-content"><p>Vous pouvez importer beaucoup de cartes d'un coup.<br>Utilisez le modèle à télécharger.</p></div>
+        </div>
+      </div>
+
+      <div class="btn-row" style="justify-content:center; margin-top:20px;">
+        <button type="button" class="btn-primary" data-goto="creer">Créer mes cartes →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ ONGLET : CREER ============ -->
+  <div class="tab-panel" id="panel-creer" role="tabpanel" aria-labelledby="tabbtn-creer" tabindex="0">
+
+    <div class="panel">
+      <div class="panel-title">📚 Le paquet de cartes</div>
+      <div class="field-row">
+        <div class="field-block">
+          <label class="field-label" for="matiereInput">Matière</label>
+          <input type="text" id="matiereInput" class="field-input" placeholder="Ex : SVT" autocomplete="off" list="matieresListe">
+          <datalist id="matieresListe"></datalist>
+        </div>
+        <div class="field-block">
+          <label class="field-label" for="chapitreInput">Chapitre</label>
+          <input type="text" id="chapitreInput" class="field-input" placeholder="Ex : La photosynthèse" autocomplete="off">
+        </div>
+      </div>
+      <span class="field-hint">Vos cartes seront rangées sous cette matière et ce chapitre. Changez-les pour commencer un nouveau paquet.</span>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">🎨 Apparence des cartes</div>
+      <div class="style-row">
+        <div class="style-group">
+          <label class="field-label" for="fontSelect">Police</label>
+          <select id="fontSelect" class="field-select">
+            <option value="'Arial','Helvetica',sans-serif">Arial (par défaut)</option>
+            <option value="'Verdana','Geneva',sans-serif">Verdana ♿ (recommandée)</option>
+            <option value="'Georgia','Times New Roman',serif">Georgia</option>
+            <option value="'Courier New','Consolas',monospace">Courier New</option>
+            <option value="'Comic Sans MS','Comic Sans',cursive">Comic Sans MS</option>
+            <option value="'Impact','Arial Narrow',sans-serif">Impact</option>
+            <option value="'Brush Script MT',cursive">Brush Script</option>
+            <option value="'Times New Roman',Times,serif">Times New Roman</option>
+            <option value="'Trebuchet MS','Lucida Sans Unicode','Lucida Grande',sans-serif">Trebuchet MS</option>
+            <option value="'Century Gothic',Futura,Avantgarde,sans-serif">Century Gothic</option>
+            <option value="Rockwell,Georgia,serif">Rockwell</option>
+            <option value="'Segoe Print','Bradley Hand','Comic Sans MS',cursive">Segoe Print</option>
+            <option value="'Palatino Linotype','Book Antiqua',Palatino,'Times New Roman',serif">Palatino</option>
+          </select>
+          <span class="field-hint">Verdana est recommandée pour sa lisibilité : lettres bien distinctes, espacement large.</span>
+        </div>
+        <div class="style-group">
+          <label class="field-label" id="couleurLabel">Couleur du texte</label>
+          <div class="color-swatches" role="radiogroup" aria-labelledby="couleurLabel" id="colorSwatches"></div>
+          <div class="custom-color-row">
+            <label class="custom-color-label" for="customColorInput">Autre couleur :</label>
+            <input type="color" id="customColorInput" class="custom-color-input" value="#1F3864" aria-label="Choisir une couleur personnalisée">
+            <button type="button" class="card-mini-btn" id="addColorBtn">+ Ajouter</button>
+          </div>
+        </div>
+      </div>
+      <span class="field-hint">Ce choix s'applique à toutes les cartes de ce paquet.</span>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">➕ Ajouter une carte</div>
+      <div class="field-block">
+        <label class="field-label" for="rectoInput">Recto — la question</label>
+        <textarea id="rectoInput" class="field-textarea" placeholder="Ex : Que produit la photosynthèse ?"></textarea>
+      </div>
+      <div class="field-block">
+        <label class="field-label" for="versoInput">Verso — la réponse</label>
+        <textarea id="versoInput" class="field-textarea" placeholder="Ex : Du glucose et du dioxygène"></textarea>
+      </div>
+      <div class="field-block">
+        <label class="field-label" for="imageUrlInput">Image (facultatif) — adresse web</label>
+        <input type="url" id="imageUrlInput" class="field-input" placeholder="https://..." autocomplete="off">
+        <span class="field-hint">L'image apparaîtra au recto. Certains sites empêchent l'affichage de leurs images ailleurs : si rien ne s'affiche, essayez une autre adresse ou importez le fichier ci-dessous.</span>
+      </div>
+      <div class="field-block">
+        <label class="field-label" for="imageFileInput">Image (facultatif) — depuis mon appareil</label>
+        <input type="file" id="imageFileInput" class="field-input" accept="image/*">
+        <span class="field-hint">L'image est réduite automatiquement pour économiser la mémoire du navigateur.</span>
+      </div>
+      <div class="btn-row">
+        <button type="button" class="btn-primary" id="addCardBtn">Ajouter la carte</button>
+        <button type="button" class="btn-secondary" id="clearFormBtn">Vider le formulaire</button>
+      </div>
+      <p class="import-preview" id="addFeedback" hidden></p>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">🗂️ Les cartes de ce paquet (<span id="deckCount">0</span>)</div>
+      <div class="card-list" id="cardList"></div>
+      <div class="btn-row" id="deckActions" hidden>
+        <button type="button" class="btn-secondary" id="reviseThisBtn">🎯 Me tester sur ce paquet</button>
+        <button type="button" class="btn-secondary" id="exportBtn">💾 Exporter ce paquet</button>
+        <button type="button" class="btn-danger" id="deleteDeckBtn">🗑️ Supprimer ce paquet</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">📦 Tous mes paquets</div>
+      <div class="deck-list" id="deckList"></div>
+    </div>
+  </div>
+
+  <!-- ============ ONGLET 2 : REVISER ============ -->
+  <div class="tab-panel" id="panel-reviser" role="tabpanel" aria-labelledby="tabbtn-reviser" tabindex="0">
+    <div class="panel">
+      <div class="panel-title">🎯 Choisir un paquet à réviser</div>
+      <div class="deck-list" id="reviewDeckList"></div>
+    </div>
+
+    <div class="panel" id="reviewZone" hidden>
+      <div class="panel-title" id="reviewDeckTitle"></div>
+      <div class="review-progress">
+        <span id="reviewCounter">Carte 1 sur 1</span>
+        <div class="review-bar"><div class="review-bar-fill" id="reviewBarFill"></div></div>
+      </div>
+
+      <div class="flashcard" id="flashcard" role="button" tabindex="0" aria-live="polite">
+        <span class="card-face-label" id="cardFaceLabel">Recto</span>
+        <div id="cardImageHolder"></div>
+        <p class="card-face-text" id="cardFaceText"></p>
+        <span class="flip-hint" id="flipHint">Cliquez sur la carte pour voir la réponse</span>
+      </div>
+
+      <div class="review-actions">
+        <button type="button" class="btn-secondary" id="prevCardBtn">◀ Précédente</button>
+        <button type="button" class="btn-primary" id="flipCardBtn">Retourner</button>
+        <button type="button" class="btn-secondary" id="nextCardBtn">Suivante ▶</button>
+      </div>
+      <div class="btn-row" style="justify-content:center; margin-top:14px;">
+        <button type="button" class="btn-secondary" id="shuffleBtn">🔀 Mélanger</button>
+        <button type="button" class="btn-secondary" id="restartBtn">↻ Recommencer</button>
+      </div>
+    </div>
+
+    <div class="panel" id="reviewDone" hidden>
+      <div class="review-done">
+        <div class="review-done-title">🎉 Paquet terminé !</div>
+        <div class="review-done-text">Vous avez parcouru toutes les cartes de ce paquet.</div>
+        <div class="btn-row" style="justify-content:center;">
+          <button type="button" class="btn-primary" id="doneRestartBtn">↻ Recommencer</button>
+          <button type="button" class="btn-secondary" id="doneOtherBtn">📦 Choisir un autre paquet</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ ONGLET 3 : IMPORTER ============ -->
+  <div class="tab-panel" id="panel-importer" role="tabpanel" aria-labelledby="tabbtn-importer" tabindex="0">
+    <div class="panel">
+      <div class="panel-title">📥 Importer des cartes depuis un fichier</div>
+      <p class="lede falc-normal-content">Préparez vos cartes dans un tableur ou un simple fichier texte, puis importez-les d'un coup. Une ligne par carte.</p>
+      <div class="falc-simple-content"><p>Écrivez vos cartes dans un fichier.<br>Une ligne = une carte.<br>Puis importez le fichier ici.</p></div>
+
+      <div class="field-block">
+        <span class="field-label">Le format attendu</span>
+        <div class="template-box" id="templateBox">recto;verso;image (facultatif)
+Que produit la photosynthèse ?;Du glucose et du dioxygène;
+Où a-t-elle lieu ?;Dans les chloroplastes;https://exemple.fr/photo.jpg</div>
+        <span class="field-hint">Séparez les colonnes par un point-virgule. La première ligne (les titres) est ignorée. La colonne image peut rester vide.</span>
+        <div class="btn-row">
+          <button type="button" class="btn-secondary" id="downloadTemplateBtn">⬇️ Télécharger le modèle</button>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-block">
+          <label class="field-label" for="importMatiere">Matière</label>
+          <input type="text" id="importMatiere" class="field-input" placeholder="Ex : SVT" autocomplete="off">
+        </div>
+        <div class="field-block">
+          <label class="field-label" for="importChapitre">Chapitre</label>
+          <input type="text" id="importChapitre" class="field-input" placeholder="Ex : La photosynthèse" autocomplete="off">
+        </div>
+      </div>
+
+      <div class="field-block">
+        <label class="field-label" for="importFile">Votre fichier (.csv ou .txt)</label>
+        <input type="file" id="importFile" class="field-input" accept=".csv,.txt,text/csv,text/plain">
+      </div>
+      <p class="import-preview" id="importFeedback" hidden></p>
+      <div class="btn-row">
+        <button type="button" class="btn-primary" id="importBtn" disabled>Importer les cartes</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="save-indicator" id="saveIndicator" role="status" aria-live="polite">✅ Enregistré</div>
+
+  <footer>Benjamin RICHARD - Tous droits réservés</footer>
+  </main>
+</div>
+
+<script>
+(function () {
+  // ============ accessibilite ============
+  const A11Y_PREFS_KEY = 'flashcards-a11y-prefs-v1';
+  let a11yPrefs = { font: false, contrast: false, scale: 1, falc: false, hoverRead: false };
+  try {
+    const rawPrefs = localStorage.getItem(A11Y_PREFS_KEY);
+    if (rawPrefs) a11yPrefs = Object.assign(a11yPrefs, JSON.parse(rawPrefs));
+  } catch (e) {}
+  function saveA11yPrefs() {
+    try { localStorage.setItem(A11Y_PREFS_KEY, JSON.stringify(a11yPrefs)); } catch (e) {}
+  }
+  function applyA11yPrefs() {
+    document.body.classList.toggle('a11y-font', a11yPrefs.font);
+    document.body.classList.toggle('a11y-contrast', a11yPrefs.contrast);
+    document.body.classList.toggle('falc-mode', a11yPrefs.falc);
+    document.documentElement.style.setProperty('--a11y-scale', a11yPrefs.scale);
+    document.getElementById('a11yFontBtn').setAttribute('aria-pressed', a11yPrefs.font ? 'true' : 'false');
+    document.getElementById('a11yContrastBtn').setAttribute('aria-pressed', a11yPrefs.contrast ? 'true' : 'false');
+    document.getElementById('falcModeBtn').setAttribute('aria-pressed', a11yPrefs.falc ? 'true' : 'false');
+    document.getElementById('hoverReadBtn').setAttribute('aria-pressed', a11yPrefs.hoverRead ? 'true' : 'false');
+  }
+  document.getElementById('a11yFontBtn').addEventListener('click', () => { a11yPrefs.font = !a11yPrefs.font; applyA11yPrefs(); saveA11yPrefs(); });
+  document.getElementById('a11yContrastBtn').addEventListener('click', () => { a11yPrefs.contrast = !a11yPrefs.contrast; applyA11yPrefs(); saveA11yPrefs(); });
+  document.getElementById('falcModeBtn').addEventListener('click', () => {
+    a11yPrefs.falc = !a11yPrefs.falc;
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    applyA11yPrefs(); saveA11yPrefs();
+  });
+  document.getElementById('hoverReadBtn').addEventListener('click', () => {
+    a11yPrefs.hoverRead = !a11yPrefs.hoverRead;
+    if (!a11yPrefs.hoverRead && window.speechSynthesis) window.speechSynthesis.cancel();
+    applyA11yPrefs(); saveA11yPrefs();
+  });
+  document.getElementById('a11ySizeUp').addEventListener('click', () => { a11yPrefs.scale = Math.min(1.6, Math.round((a11yPrefs.scale + 0.15) * 100) / 100); applyA11yPrefs(); saveA11yPrefs(); });
+  document.getElementById('a11ySizeDown').addEventListener('click', () => { a11yPrefs.scale = Math.max(0.85, Math.round((a11yPrefs.scale - 0.15) * 100) / 100); applyA11yPrefs(); saveA11yPrefs(); });
+  document.getElementById('a11ySizeReset').addEventListener('click', () => { a11yPrefs.scale = 1; applyA11yPrefs(); saveA11yPrefs(); });
+  applyA11yPrefs();
+
+  // ============ lecture au survol ============
+  function getVisibleHoverText(el) {
+    const isFalc = document.body.classList.contains('falc-mode');
+    if (isFalc && el.closest('.falc-normal-content')) return '';
+    if (!isFalc && el.closest('.falc-simple-content')) return '';
+    if (el.tagName === 'SELECT') {
+      const selected = el.options[el.selectedIndex];
+      return (el.getAttribute('aria-label') ? el.getAttribute('aria-label') + ' : ' : '') + (selected ? selected.textContent.trim() : '');
+    }
+    if (el.matches('input, textarea')) {
+      return (el.getAttribute('aria-label') || el.placeholder || '').trim();
+    }
+    const clone = el.cloneNode(true);
+    clone.querySelectorAll(isFalc ? '.falc-normal-content' : '.falc-simple-content').forEach(n => n.remove());
+    clone.querySelectorAll('[aria-hidden="true"], .sr-only').forEach(n => n.remove());
+    const texte = clone.textContent.replace(/\s+/g, ' ').trim();
+    return texte || (el.getAttribute('aria-label') || '').trim();
+  }
+  const hoverReadSupported = 'speechSynthesis' in window;
+  function attachHoverRead(el) {
+    if (!hoverReadSupported || el.dataset.hoverReadAttached) return;
+    el.dataset.hoverReadAttached = '1';
+    el.addEventListener('mouseenter', () => {
+      if (!a11yPrefs.hoverRead) return;
+      window.speechSynthesis.cancel();
+      const text = getVisibleHoverText(el);
+      if (!text) return;
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = 'fr-FR'; utter.rate = 0.95;
+      window.speechSynthesis.speak(utter);
+    });
+    el.addEventListener('mouseleave', () => { if (window.speechSynthesis) window.speechSynthesis.cancel(); });
+    el.addEventListener('focusin', () => { if (a11yPrefs.hoverRead) el.dispatchEvent(new Event('mouseenter')); });
+    el.addEventListener('focusout', () => { if (window.speechSynthesis) window.speechSynthesis.cancel(); });
+  }
+  // ---- barre d'accessibilite figee au defilement ----
+  // Elle reste atteignable a tout moment : un apprenant qui a besoin d'agrandir le texte
+  // ne doit pas avoir a remonter en haut de page pour le faire.
+  (function figerBarreA11y() {
+    const barre = document.getElementById('a11yBar');
+    const espace = document.getElementById('a11yBarEspace');
+    if (!barre || !espace) return;
+
+    let hauteurBarre = 0;
+    let positionDeclenchement = 0;
+
+    function mesurer() {
+      // mesure faite hors etat fige, sinon la position serait faussee
+      if (barre.classList.contains('figee')) return;
+      hauteurBarre = barre.offsetHeight;
+      positionDeclenchement = barre.getBoundingClientRect().top + window.scrollY;
+    }
+
+    function verifier() {
+      if (window.scrollY > positionDeclenchement) {
+        if (!barre.classList.contains('figee')) {
+          espace.style.height = hauteurBarre + 'px';
+          espace.classList.add('actif');
+          barre.classList.add('figee');
+        }
+      } else if (barre.classList.contains('figee')) {
+        barre.classList.remove('figee');
+        espace.classList.remove('actif');
+        mesurer();
+      }
+    }
+
+    mesurer();
+    window.addEventListener('scroll', verifier, { passive: true });
+    window.addEventListener('resize', () => {
+      // au redimensionnement, la barre change de hauteur : on remesure a froid
+      const etaitFigee = barre.classList.contains('figee');
+      barre.classList.remove('figee');
+      espace.classList.remove('actif');
+      mesurer();
+      if (etaitFigee) verifier();
+    });
+  })();
+  const HOVER_READ_SELECTOR = 'h1, .panel-title, .lede, p, li, label, input, select, textarea, .tab-btn, .back-to-hub, .a11y-toggle-btn, .a11y-bar-label, .field-hint, .btn-primary, .btn-secondary, .btn-danger, .card-mini-btn, .card-item-front, .card-item-back, .deck-name, .deck-count, .deck-tag, .empty-msg, .card-face-text, .card-face-label, .flip-hint, .review-done-title, .review-done-text, .import-preview, .template-box, .card-img-error, .conseil-title, .conseil-text, .how-title, .mini-btn, .a11y-size-group button';
+  function attachHoverReadAll(root) {
+    (root || document).querySelectorAll(HOVER_READ_SELECTOR).forEach(attachHoverRead);
+  }
+
+  // ============ onglets ============
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tab = btn.dataset.tab;
+      document.querySelectorAll('.tab-btn').forEach(b => {
+        const isActive = b === btn;
+        b.classList.toggle('active', isActive);
+        b.setAttribute('aria-selected', isActive ? 'true' : 'false');
+      });
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + tab));
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
+      if (tab === 'reviser') renderReviewDeckList();
+    });
+  });
+  // boutons « Créer mes cartes → » depuis les onglets explicatifs
+  document.querySelectorAll('[data-goto]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelector(`.tab-btn[data-tab="${btn.dataset.goto}"]`).click();
+      window.scrollTo({ top: 0, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    });
+  });
+
+  // ============ donnees ============
+  const STORAGE_KEY = 'flashcards-v1';
+  const MATIERE_COLORS = ['#1F3864', '#C9501B', '#138072', '#8C7045', '#8A5CB0', '#C23B6B', '#2E6B9E', '#427D35'];
+  const TEXT_COLORS = ['#1F3864', '#C0392B', '#277649', '#8A5CB0', '#C9501B', '#138072'];
+  const CUSTOM_COLORS_KEY = 'flashcards-couleurs-perso-v1';
+  let customColors = [];
+  try {
+    const rawColors = localStorage.getItem(CUSTOM_COLORS_KEY);
+    customColors = rawColors ? JSON.parse(rawColors) : [];
+  } catch (e) { customColors = []; }
+  function saveCustomColors() {
+    try { localStorage.setItem(CUSTOM_COLORS_KEY, JSON.stringify(customColors)); } catch (e) {}
+  }
+
+  let cards = loadCards();
+  let currentStyle = { font: 'Arial, Helvetica, sans-serif', color: '#1F3864' };
+
+  function loadCards() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) { return []; }
+  }
+
+  let saveIndicatorTimer = null;
+  function showSaveIndicator(ok, message) {
+    const el = document.getElementById('saveIndicator');
+    if (!el) return;
+    el.textContent = ok ? '✅ Enregistré' : (message || '⚠️ Sauvegarde impossible');
+    el.classList.toggle('save-error', !ok);
+    el.classList.add('show');
+    clearTimeout(saveIndicatorTimer);
+    saveIndicatorTimer = setTimeout(() => el.classList.remove('show'), ok ? 1800 : 4000);
+  }
+
+  function saveCards() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(cards));
+      showSaveIndicator(true);
+      return true;
+    } catch (e) {
+      // le plus souvent : quota depasse a cause des images importees
+      showSaveIndicator(false, "⚠️ Mémoire pleine : supprimez des images ou des cartes");
+      return false;
+    }
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+  }
+  function escapeAttr(s) { return escapeHtml(s); }
+
+  function matiereColor(matiere) {
+    const nom = (matiere || '').trim().toLowerCase();
+    if (!nom) return MATIERE_COLORS[0];
+    let hash = 0;
+    for (let i = 0; i < nom.length; i++) hash = (hash * 31 + nom.charCodeAt(i)) >>> 0;
+    return MATIERE_COLORS[hash % MATIERE_COLORS.length];
+  }
+
+  function deckKey(matiere, chapitre) {
+    return (matiere || '').trim() + '||' + (chapitre || '').trim();
+  }
+  function deckLabel(matiere, chapitre) {
+    const m = (matiere || '').trim();
+    const c = (chapitre || '').trim();
+    if (m && c) return c;
+    return c || m || '(sans titre)';
+  }
+
+  // ============ journalisation pour les badges ============
+  function logFlashcardsActivity(matiere, chapitre, nbCartes) {
+    try {
+      const raw = localStorage.getItem('accueil-activity-v1');
+      const activity = raw ? JSON.parse(raw) : [];
+      activity.push({
+        tool: 'flashcards',
+        matiere: matiere || '',
+        chapitre: chapitre || '',
+        depth: nbCartes || 0,
+        colors: 0,
+        createdAt: new Date().toISOString()
+      });
+      localStorage.setItem('accueil-activity-v1', JSON.stringify(activity));
+    } catch (e) {}
+  }
+
+  // ============ personnalisation ============
+  const fontSelect = document.getElementById('fontSelect');
+  const colorSwatches = document.getElementById('colorSwatches');
+
+  function renderColorSwatches() {
+    const toutes = TEXT_COLORS.concat(customColors);
+    colorSwatches.innerHTML = toutes.map((c, i) => {
+      const perso = i >= TEXT_COLORS.length;
+      return `<button type="button" class="color-swatch${c === currentStyle.color ? ' selected' : ''}" data-color="${c}" style="background:${c}" role="radio" aria-checked="${c === currentStyle.color}" aria-label="Couleur ${c}${perso ? ', personnalisée — double-cliquez pour la retirer' : ''}"${perso ? ' data-perso="1" title="Double-cliquez pour retirer cette couleur"' : ''}></button>`;
+    }).join('');
+    colorSwatches.querySelectorAll('.color-swatch').forEach(btn => {
+      btn.addEventListener('click', () => {
+        currentStyle.color = btn.dataset.color;
+        renderColorSwatches();
+        renderCardList();
+      });
+      if (btn.dataset.perso) {
+        btn.addEventListener('dblclick', () => {
+          customColors = customColors.filter(c => c !== btn.dataset.color);
+          saveCustomColors();
+          if (currentStyle.color === btn.dataset.color) currentStyle.color = TEXT_COLORS[0];
+          renderColorSwatches();
+          renderCardList();
+        });
+      }
+    });
+    attachHoverReadAll(colorSwatches);
+  }
+
+  document.getElementById('addColorBtn').addEventListener('click', () => {
+    const couleur = document.getElementById('customColorInput').value;
+    if (!TEXT_COLORS.includes(couleur) && !customColors.includes(couleur)) {
+      customColors.push(couleur);
+      saveCustomColors();
+    }
+    currentStyle.color = couleur;
+    renderColorSwatches();
+    renderCardList();
+  });
+
+  fontSelect.addEventListener('change', () => {
+    currentStyle.font = fontSelect.value;
+    renderCardList();
+  });
+
+  // ============ creation de cartes ============
+  const matiereInput = document.getElementById('matiereInput');
+  const chapitreInput = document.getElementById('chapitreInput');
+  const rectoInput = document.getElementById('rectoInput');
+  const versoInput = document.getElementById('versoInput');
+  const imageUrlInput = document.getElementById('imageUrlInput');
+  const imageFileInput = document.getElementById('imageFileInput');
+  const addFeedback = document.getElementById('addFeedback');
+
+  let pendingImageData = null; // image importee depuis l'appareil, reduite
+
+  function showAddFeedback(msg, isError) {
+    addFeedback.textContent = msg;
+    addFeedback.className = 'import-preview' + (isError ? ' error' : '');
+    addFeedback.hidden = false;
+    attachHoverRead(addFeedback);
+  }
+
+  // reduit l'image avant stockage : le localStorage est limite a environ 5 Mo
+  function reduireImage(file, maxDim, callback) {
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxDim || height > maxDim) {
+          const ratio = Math.min(maxDim / width, maxDim / height);
+          width = Math.round(width * ratio);
+          height = Math.round(height * ratio);
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        callback(canvas.toDataURL('image/jpeg', 0.72));
+      };
+      img.onerror = () => callback(null);
+      img.src = ev.target.result;
+    };
+    reader.onerror = () => callback(null);
+    reader.readAsDataURL(file);
+  }
+
+  imageFileInput.addEventListener('change', () => {
+    const file = imageFileInput.files && imageFileInput.files[0];
+    if (!file) { pendingImageData = null; return; }
+    reduireImage(file, 700, (dataUrl) => {
+      if (!dataUrl) {
+        pendingImageData = null;
+        showAddFeedback("Ce fichier n'a pas pu être lu. Essayez une autre image.", true);
+        return;
+      }
+      pendingImageData = dataUrl;
+      showAddFeedback('Image prête : elle sera ajoutée au recto de la carte.', false);
+    });
+  });
+
+  document.getElementById('addCardBtn').addEventListener('click', () => {
+    const recto = rectoInput.value.trim();
+    const verso = versoInput.value.trim();
+    const matiere = matiereInput.value.trim();
+    const chapitre = chapitreInput.value.trim();
+
+    if (!recto || !verso) {
+      showAddFeedback('Écrivez au moins une question et une réponse avant d\'ajouter la carte.', true);
+      (recto ? versoInput : rectoInput).focus();
+      return;
+    }
+    if (!matiere && !chapitre) {
+      showAddFeedback('Indiquez au moins une matière ou un chapitre, pour ranger la carte.', true);
+      matiereInput.focus();
+      return;
+    }
+
+    cards.push({
+      id: 'c' + Date.now() + Math.random().toString(36).slice(2, 7),
+      matiere, chapitre, recto, verso,
+      image: pendingImageData || imageUrlInput.value.trim() || '',
+      font: currentStyle.font,
+      color: currentStyle.color,
+      createdAt: new Date().toISOString()
+    });
+
+    if (saveCards()) {
+      logFlashcardsActivity(matiere, chapitre, cards.filter(c => deckKey(c.matiere, c.chapitre) === deckKey(matiere, chapitre)).length);
+      showAddFeedback('Carte ajoutée.', false);
+      rectoInput.value = ''; versoInput.value = '';
+      imageUrlInput.value = ''; imageFileInput.value = '';
+      pendingImageData = null;
+      rectoInput.focus();
+      renderAll();
+    } else {
+      cards.pop(); // la sauvegarde a echoue : on ne garde pas la carte en memoire
+    }
+  });
+
+  document.getElementById('clearFormBtn').addEventListener('click', () => {
+    rectoInput.value = ''; versoInput.value = '';
+    imageUrlInput.value = ''; imageFileInput.value = '';
+    pendingImageData = null;
+    addFeedback.hidden = true;
+    rectoInput.focus();
+  });
+
+  // ============ rendu de la liste des cartes du paquet courant ============
+  const cardList = document.getElementById('cardList');
+  const deckCount = document.getElementById('deckCount');
+  const deckActions = document.getElementById('deckActions');
+
+  function currentDeckCards() {
+    const k = deckKey(matiereInput.value, chapitreInput.value);
+    return cards.filter(c => deckKey(c.matiere, c.chapitre) === k);
+  }
+
+  function renderCardList() {
+    const liste = currentDeckCards();
+    deckCount.textContent = liste.length;
+    deckActions.hidden = liste.length === 0;
+
+    if (liste.length === 0) {
+      cardList.innerHTML = '<div class="empty-msg">Aucune carte dans ce paquet pour l\'instant. Ajoutez-en une ci-dessus.</div>';
+      attachHoverReadAll(cardList);
+      return;
+    }
+    cardList.innerHTML = liste.map(c => `
+      <div class="card-item">
+        <div class="card-item-front" style="font-family:${escapeAttr(c.font)}; color:${escapeAttr(c.color)};">${escapeHtml(c.recto)}</div>
+        <div class="card-item-back" style="font-family:${escapeAttr(c.font)};">${escapeHtml(c.verso)}</div>
+        ${c.image ? '<div class="card-item-img">🖼️ Contient une image</div>' : ''}
+        <div class="card-item-actions">
+          <button type="button" class="card-mini-btn" data-edit="${c.id}">✏️ Modifier</button>
+          <button type="button" class="card-mini-btn danger" data-del="${c.id}">✕ Supprimer</button>
+        </div>
+      </div>
+    `).join('');
+
+    cardList.querySelectorAll('[data-del]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const carte = cards.find(c => c.id === btn.dataset.del);
+        if (!carte) return;
+        if (!confirm('Supprimer définitivement cette carte ?')) return;
+        cards = cards.filter(c => c.id !== btn.dataset.del);
+        saveCards();
+        renderAll();
+      });
+    });
+    cardList.querySelectorAll('[data-edit]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const carte = cards.find(c => c.id === btn.dataset.edit);
+        if (!carte) return;
+        rectoInput.value = carte.recto;
+        versoInput.value = carte.verso;
+        if (carte.image && carte.image.startsWith('http')) imageUrlInput.value = carte.image;
+        pendingImageData = carte.image && carte.image.startsWith('data:') ? carte.image : null;
+        cards = cards.filter(c => c.id !== carte.id);
+        saveCards();
+        renderAll();
+        showAddFeedback('Carte chargée dans le formulaire : modifiez-la puis ajoutez-la à nouveau.', false);
+        rectoInput.focus();
+      });
+    });
+    attachHoverReadAll(cardList);
+  }
+
+  // ============ liste des paquets ============
+  function tousLesPaquets() {
+    const map = new Map();
+    cards.forEach(c => {
+      const k = deckKey(c.matiere, c.chapitre);
+      if (!map.has(k)) map.set(k, { matiere: c.matiere, chapitre: c.chapitre, cartes: [] });
+      map.get(k).cartes.push(c);
+    });
+    return [...map.values()];
+  }
+
+  function renderDeckList() {
+    const paquets = tousLesPaquets();
+    const el = document.getElementById('deckList');
+    if (paquets.length === 0) {
+      el.innerHTML = '<div class="empty-msg">Aucun paquet pour l\'instant.</div>';
+      attachHoverReadAll(el);
+      return;
+    }
+    el.innerHTML = paquets.map((p, i) => `
+      <button type="button" class="deck-item" data-deck="${i}">
+        <div class="deck-info">
+          ${p.matiere ? `<span class="deck-tag" style="background:${matiereColor(p.matiere)}">${escapeHtml(p.matiere)}</span>` : ''}
+          <div class="deck-name">${escapeHtml(deckLabel(p.matiere, p.chapitre))}</div>
+          <div class="deck-count">${p.cartes.length} carte${p.cartes.length > 1 ? 's' : ''}</div>
+        </div>
+        <span aria-hidden="true">→</span>
+      </button>
+    `).join('');
+    el.querySelectorAll('[data-deck]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const p = paquets[parseInt(btn.dataset.deck, 10)];
+        matiereInput.value = p.matiere || '';
+        chapitreInput.value = p.chapitre || '';
+        renderAll();
+        matiereInput.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' });
+      });
+    });
+    attachHoverReadAll(el);
+  }
+
+  function renderMatieresDatalist() {
+    const distinctes = [...new Set(cards.map(c => (c.matiere || '').trim()).filter(Boolean))];
+    document.getElementById('matieresListe').innerHTML = distinctes.map(m => `<option value="${escapeAttr(m)}">`).join('');
+  }
+
+  function renderAll() {
+    renderCardList();
+    renderDeckList();
+    renderMatieresDatalist();
+    renderReviewDeckList();
+  }
+
+  matiereInput.addEventListener('input', () => { renderCardList(); });
+  chapitreInput.addEventListener('input', () => { renderCardList(); });
+
+  // ============ actions sur le paquet courant ============
+  document.getElementById('deleteDeckBtn').addEventListener('click', () => {
+    const liste = currentDeckCards();
+    if (liste.length === 0) return;
+    if (!confirm(`Supprimer définitivement ce paquet et ses ${liste.length} carte(s) ?`)) return;
+    const k = deckKey(matiereInput.value, chapitreInput.value);
+    cards = cards.filter(c => deckKey(c.matiere, c.chapitre) !== k);
+    saveCards();
+    renderAll();
+  });
+
+  document.getElementById('exportBtn').addEventListener('click', () => {
+    const liste = currentDeckCards();
+    if (liste.length === 0) return;
+    const lignes = ['recto;verso;image'];
+    liste.forEach(c => {
+      const img = (c.image && c.image.startsWith('http')) ? c.image : '';
+      lignes.push([c.recto, c.verso, img].map(v => String(v).replace(/;/g, ',').replace(/\r?\n/g, ' ')).join(';'));
+    });
+    telecharger(lignes.join('\n'), `flashcards-${(chapitreInput.value || matiereInput.value || 'paquet').replace(/[^a-zA-Z0-9-_]/g, '_')}.csv`);
+  });
+
+  document.getElementById('reviseThisBtn').addEventListener('click', () => {
+    const liste = currentDeckCards();
+    if (liste.length === 0) return;
+    document.querySelector('.tab-btn[data-tab="reviser"]').click();
+    demarrerRevision(liste, deckLabel(matiereInput.value, chapitreInput.value));
+  });
+
+  function telecharger(contenu, nomFichier) {
+    // BOM UTF-8 pour que les accents s'affichent correctement dans Excel
+    const blob = new Blob(['\ufeff' + contenu], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = nomFichier;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  // ============ revision ============
+  let reviewCards = [];
+  let reviewIndex = 0;
+  let showingBack = false;
+  let reviewTitle = '';
+
+  const reviewZone = document.getElementById('reviewZone');
+  const reviewDone = document.getElementById('reviewDone');
+  const flashcard = document.getElementById('flashcard');
+  const cardFaceLabel = document.getElementById('cardFaceLabel');
+  const cardFaceText = document.getElementById('cardFaceText');
+  const cardImageHolder = document.getElementById('cardImageHolder');
+  const flipHint = document.getElementById('flipHint');
+
+  function renderReviewDeckList() {
+    const paquets = tousLesPaquets();
+    const el = document.getElementById('reviewDeckList');
+    if (paquets.length === 0) {
+      el.innerHTML = '<div class="empty-msg">Créez d\'abord des cartes dans l\'onglet « Créer mes cartes ».</div>';
+      attachHoverReadAll(el);
+      return;
+    }
+    el.innerHTML = paquets.map((p, i) => `
+      <button type="button" class="deck-item" data-review="${i}">
+        <div class="deck-info">
+          ${p.matiere ? `<span class="deck-tag" style="background:${matiereColor(p.matiere)}">${escapeHtml(p.matiere)}</span>` : ''}
+          <div class="deck-name">${escapeHtml(deckLabel(p.matiere, p.chapitre))}</div>
+          <div class="deck-count">${p.cartes.length} carte${p.cartes.length > 1 ? 's' : ''}</div>
+        </div>
+        <span aria-hidden="true">🎯</span>
+      </button>
+    `).join('');
+    el.querySelectorAll('[data-review]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const p = paquets[parseInt(btn.dataset.review, 10)];
+        demarrerRevision(p.cartes, deckLabel(p.matiere, p.chapitre));
+      });
+    });
+    attachHoverReadAll(el);
+  }
+
+  function demarrerRevision(liste, titre) {
+    reviewCards = liste.slice();
+    reviewTitle = titre;
+    reviewIndex = 0;
+    showingBack = false;
+    reviewZone.hidden = false;
+    reviewDone.hidden = true;
+    document.getElementById('reviewDeckTitle').textContent = '🎯 ' + titre;
+    afficherCarte();
+    reviewZone.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+  }
+
+  function afficherCarte() {
+    const c = reviewCards[reviewIndex];
+    if (!c) return;
+    cardFaceLabel.textContent = showingBack ? 'Verso' : 'Recto';
+    cardFaceText.textContent = showingBack ? c.verso : c.recto;
+    cardFaceText.style.fontFamily = c.font || 'Arial, Helvetica, sans-serif';
+    cardFaceText.style.color = c.color || '#1F3864';
+    cardFaceText.dataset.customFont = '1';
+    flipHint.textContent = showingBack ? 'Cliquez pour revoir la question' : 'Cliquez sur la carte pour voir la réponse';
+    flashcard.setAttribute('aria-label', (showingBack ? 'Verso : ' : 'Recto : ') + (showingBack ? c.verso : c.recto) + '. Activez pour retourner la carte.');
+
+    // l'image n'apparait qu'au recto
+    cardImageHolder.innerHTML = '';
+    if (!showingBack && c.image) {
+      const img = document.createElement('img');
+      img.className = 'card-face-img';
+      img.alt = 'Illustration de la carte';
+      img.src = c.image;
+      img.addEventListener('error', () => {
+        cardImageHolder.innerHTML = '<div class="card-img-error">⚠️ Cette image n\'a pas pu être affichée. Le site qui l\'héberge en empêche peut-être l\'affichage ici.</div>';
+        attachHoverReadAll(cardImageHolder);
+      });
+      cardImageHolder.appendChild(img);
+    }
+
+    document.getElementById('reviewCounter').textContent = `Carte ${reviewIndex + 1} sur ${reviewCards.length}`;
+    document.getElementById('reviewBarFill').style.width = ((reviewIndex + 1) / reviewCards.length * 100) + '%';
+    document.getElementById('prevCardBtn').disabled = reviewIndex === 0;
+    attachHoverReadAll(flashcard);
+  }
+
+  function retourner() {
+    showingBack = !showingBack;
+    afficherCarte();
+  }
+  flashcard.addEventListener('click', retourner);
+  flashcard.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); retourner(); }
+  });
+  document.getElementById('flipCardBtn').addEventListener('click', retourner);
+
+  document.getElementById('nextCardBtn').addEventListener('click', () => {
+    if (reviewIndex < reviewCards.length - 1) {
+      reviewIndex++; showingBack = false; afficherCarte();
+    } else {
+      reviewZone.hidden = true;
+      reviewDone.hidden = false;
+      reviewDone.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' });
+    }
+  });
+  document.getElementById('prevCardBtn').addEventListener('click', () => {
+    if (reviewIndex > 0) { reviewIndex--; showingBack = false; afficherCarte(); }
+  });
+  document.getElementById('shuffleBtn').addEventListener('click', () => {
+    for (let i = reviewCards.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [reviewCards[i], reviewCards[j]] = [reviewCards[j], reviewCards[i]];
+    }
+    reviewIndex = 0; showingBack = false; afficherCarte();
+  });
+  document.getElementById('restartBtn').addEventListener('click', () => {
+    reviewIndex = 0; showingBack = false; afficherCarte();
+  });
+  document.getElementById('doneRestartBtn').addEventListener('click', () => {
+    reviewZone.hidden = false; reviewDone.hidden = true;
+    reviewIndex = 0; showingBack = false; afficherCarte();
+  });
+  document.getElementById('doneOtherBtn').addEventListener('click', () => {
+    reviewZone.hidden = true; reviewDone.hidden = true;
+    document.getElementById('reviewDeckList').scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' });
+  });
+
+  // navigation au clavier pendant la revision
+  document.addEventListener('keydown', (ev) => {
+    if (reviewZone.hidden) return;
+    if (!document.getElementById('panel-reviser').classList.contains('active')) return;
+    if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) return;
+    if (ev.key === 'ArrowRight') { ev.preventDefault(); document.getElementById('nextCardBtn').click(); }
+    if (ev.key === 'ArrowLeft') { ev.preventDefault(); document.getElementById('prevCardBtn').click(); }
+  });
+
+  // ============ import ============
+  const importFile = document.getElementById('importFile');
+  const importFeedback = document.getElementById('importFeedback');
+  const importBtn = document.getElementById('importBtn');
+  let cartesAImporter = [];
+
+  function showImportFeedback(msg, isError) {
+    importFeedback.textContent = msg;
+    importFeedback.className = 'import-preview' + (isError ? ' error' : '');
+    importFeedback.hidden = false;
+    attachHoverRead(importFeedback);
+  }
+
+  document.getElementById('downloadTemplateBtn').addEventListener('click', () => {
+    const modele = [
+      'recto;verso;image',
+      'Que produit la photosynthèse ?;Du glucose et du dioxygène;',
+      'Où a-t-elle lieu ?;Dans les chloroplastes;',
+      'De quoi la plante a-t-elle besoin ?;De lumière, d\'eau et de dioxyde de carbone;'
+    ].join('\n');
+    telecharger(modele, 'modele-flashcards.csv');
+  });
+
+  importFile.addEventListener('change', () => {
+    const file = importFile.files && importFile.files[0];
+    cartesAImporter = [];
+    importBtn.disabled = true;
+    if (!file) { importFeedback.hidden = true; return; }
+
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const texte = String(ev.target.result || '');
+      const lignes = texte.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+      if (lignes.length === 0) {
+        showImportFeedback('Ce fichier est vide.', true);
+        return;
+      }
+      // ignorer la ligne de titres si elle correspond au modele
+      let debut = 0;
+      const premiere = lignes[0].toLowerCase();
+      if (premiere.startsWith('recto;') || premiere.startsWith('recto,')) debut = 1;
+
+      const separateur = lignes[debut] && lignes[debut].includes(';') ? ';' : ',';
+      const rejetees = [];
+      lignes.slice(debut).forEach((ligne, i) => {
+        const parts = ligne.split(separateur);
+        const recto = (parts[0] || '').trim();
+        const verso = (parts[1] || '').trim();
+        const image = (parts[2] || '').trim();
+        if (!recto || !verso) { rejetees.push(debut + i + 1); return; }
+        cartesAImporter.push({ recto, verso, image });
+      });
+
+      if (cartesAImporter.length === 0) {
+        showImportFeedback("Aucune carte valide trouvée. Vérifiez que chaque ligne contient une question ET une réponse, séparées par un point-virgule.", true);
+        return;
+      }
+      let msg = `${cartesAImporter.length} carte${cartesAImporter.length > 1 ? 's' : ''} prête${cartesAImporter.length > 1 ? 's' : ''} à importer.`;
+      if (rejetees.length > 0) msg += ` ${rejetees.length} ligne(s) ignorée(s) car incomplète(s) : ligne ${rejetees.slice(0, 5).join(', ')}${rejetees.length > 5 ? '…' : ''}.`;
+      showImportFeedback(msg, false);
+      importBtn.disabled = false;
+    };
+    reader.onerror = () => showImportFeedback("Ce fichier n'a pas pu être lu.", true);
+    reader.readAsText(file, 'UTF-8');
+  });
+
+  importBtn.addEventListener('click', () => {
+    const matiere = document.getElementById('importMatiere').value.trim();
+    const chapitre = document.getElementById('importChapitre').value.trim();
+    if (!matiere && !chapitre) {
+      showImportFeedback('Indiquez au moins une matière ou un chapitre avant d\'importer.', true);
+      document.getElementById('importMatiere').focus();
+      return;
+    }
+    if (cartesAImporter.length === 0) return;
+
+    const avant = cards.length;
+    cartesAImporter.forEach((c, i) => {
+      cards.push({
+        id: 'c' + Date.now() + i + Math.random().toString(36).slice(2, 7),
+        matiere, chapitre,
+        recto: c.recto, verso: c.verso, image: c.image || '',
+        font: currentStyle.font, color: currentStyle.color,
+        createdAt: new Date().toISOString()
+      });
+    });
+
+    if (saveCards()) {
+      logFlashcardsActivity(matiere, chapitre, cartesAImporter.length);
+      showImportFeedback(`${cartesAImporter.length} carte(s) importée(s) dans « ${deckLabel(matiere, chapitre)} ».`, false);
+      matiereInput.value = matiere;
+      chapitreInput.value = chapitre;
+      cartesAImporter = [];
+      importFile.value = '';
+      importBtn.disabled = true;
+      renderAll();
+    } else {
+      cards.length = avant; // sauvegarde impossible : on annule l'import
+    }
+  });
+
+  // ============ init ============
+  renderColorSwatches();
+  renderAll();
+  attachHoverReadAll();
+})();
+</script>
+
+<script src="accueil-habitant.js" data-outil="flashcards_conception"></script>
+</body>
+</html>
